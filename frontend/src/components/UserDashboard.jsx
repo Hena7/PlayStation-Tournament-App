@@ -5,17 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 function UserDashboard() {
   const [rankings, setRankings] = useState([]);
   const [matches, setMatches] = useState([]);
-  const URL = "http://localhost:5000";
+  const API_BASE_URL = "http://localhost:5000";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         const [rankingsRes, matchesRes] = await Promise.all([
-          axios.get(`${URL}/api/ranking`, {
+          axios.get(`${API_BASE_URL}/api/ranking`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${URL}/api/tournament/matches`, {
+          axios.get(`${API_BASE_URL}/api/user/matches`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
