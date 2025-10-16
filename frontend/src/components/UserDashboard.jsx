@@ -1,27 +1,32 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 function UserDashboard() {
-  const [rankings, setRankings] = useState([])
-  const [matches, setMatches] = useState([])
+  const [rankings, setRankings] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const URL = "http://localhost:5000";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token')
+        const token = localStorage.getItem("token");
         const [rankingsRes, matchesRes] = await Promise.all([
-          axios.get('/api/ranking', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('/api/tournament/matches', { headers: { Authorization: `Bearer ${token}` } }),
-        ])
-        setRankings(rankingsRes.data)
-        setMatches(matchesRes.data)
+          axios.get(`${URL}/api/ranking`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${URL}/api/tournament/matches`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+        setRankings(rankingsRes.data);
+        setMatches(matchesRes.data);
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
-    }
-    fetchData()
-  }, [])
+    };
+    fetchData();
+  }, []);
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-blue-900 to-black">
@@ -46,14 +51,15 @@ function UserDashboard() {
           <CardContent>
             {matches.map((match) => (
               <p key={match.id}>
-                Round {match.round}: {match.player1_id} vs {match.player2_id} - Winner: {match.winner_id || 'Pending'}
+                Round {match.round}: {match.player1_id} vs {match.player2_id} -
+                Winner: {match.winner_id || "Pending"}
               </p>
             ))}
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }
 
-export default UserDashboard
+export default UserDashboard;
