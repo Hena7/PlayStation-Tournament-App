@@ -20,8 +20,10 @@ function AuthForm() {
       const url = isLogin
         ? `${API_BASE_URL}/api/auth/login`
         : `${API_BASE_URL}/api/auth/register`;
+
       const response = await axios.post(url, formData);
       localStorage.setItem("token", response.data.token);
+      console.log(formData);
       navigate(response.data.user.isAdmin ? "/admin" : "/dashboard");
     } catch (error) {
       console.error(error);

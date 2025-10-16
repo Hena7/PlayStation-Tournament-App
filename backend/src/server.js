@@ -1,10 +1,12 @@
 import express from "express";
 import cors from "cors";
-import 'dotenv/config'
+
 import authRoutes from "./routes/auth.js";
 import tournamentRoutes from "./routes/tournament.js";
 import rankingRoutes from "./routes/ranking.js";
+import dotenv from "dotenv";
 
+dotenv.config();
 const app = express();
 
 app.use(cors());
