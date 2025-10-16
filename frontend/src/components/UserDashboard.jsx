@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import UserProfile from "./UserProfile";
 
 function UserDashboard() {
   const [rankings, setRankings] = useState([]);
@@ -57,6 +58,10 @@ function UserDashboard() {
             ))}
           </CardContent>
         </Card>
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-black p-4 sm:p-8">
+      <div className="container mx-auto">
+        <UserProfile />
+        {/* You can add other dashboard components here in the future */}
       </div>
     </div>
   );

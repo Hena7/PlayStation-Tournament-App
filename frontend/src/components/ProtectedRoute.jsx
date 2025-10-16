@@ -1,17 +1,16 @@
 import { Navigate } from "react-router-dom";
 
 const getUser = () => {
-  const token = localStorage.getItem("token");
-  if (!token) {
+  const userString = localStorage.getItem("user");
+  if (!userString) {
     return null;
   }
   try {
-    // Basic JWT decoding (no signature verification)
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return { token, ...payload };
+    // Parse the user object from localStorage
+    return JSON.parse(userString);
   } catch (e) {
-    console.error("Invalid token:", e);
-    localStorage.removeItem("token");
+    console.error("Invalid user data in localStorage:", e);
+    localStorage.removeItem("user"); // Clean up invalid data
     return null;
   }
 };
@@ -23,7 +22,7 @@ function ProtectedRoute({ children, adminOnly }) {
     return <Navigate to="/" replace />;
   }
 
-  if (adminOnly && !user.isAdmin) {
+  if (adminOnly && !user.is_admin) {
     return <Navigate to="/dashboard" replace />;
   }
 

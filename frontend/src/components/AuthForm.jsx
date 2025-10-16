@@ -25,8 +25,9 @@ function AuthForm() {
 
       const response = await axios.post(url, formData);
       localStorage.setItem("token", response.data.token);
-      console.log(formData);
-      navigate(response.data.user.isAdmin ? "/admin" : "/dashboard");
+      // Save the user object to localStorage
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      navigate(response.data.user.is_admin ? "/admin" : "/dashboard");
     } catch (error) {
       console.error(error);
     } finally {
