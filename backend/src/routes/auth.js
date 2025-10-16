@@ -17,7 +17,7 @@ router.post("/register", async (req, res) => {
     );
     const user = result.rows[0];
     const token = jwt.sign(
-      { id: user.id, isAdmin: user.is_admin },
+      { id: user.id, is_admin: user.is_admin },
       process.env.JWT_SECRET
     );
     res.json({ token, user });
@@ -37,7 +37,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
     const token = jwt.sign(
-      { id: user.id, isAdmin: user.is_admin },
+      { id: user.id, is_admin: user.is_admin },
       process.env.JWT_SECRET
     );
     res.json({ token, user });

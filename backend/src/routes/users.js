@@ -1,0 +1,97 @@
+import express from "express";
+import multer from "multer";
+import path from "path";
+import db from "../config/db.js";
+import { authMiddleware } from "../middleware/auth.js";
+
+const router = express.Router();
+
+// --- Multer Configuration ---
+// Set up storage for uploaded files
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // Files will be saved in the 'public/uploads' directory
+    cb(null, "public/uploads/");
+  },
+  filename: (req, file, cb) => {
+    // Create a unique filename to prevent overwrites
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      `user-${req.params.id}-${uniqueSuffix}${path.extname(file.originalname)}`
+    );
+  },
+});
+
+// Create the multer instance
+const upload = multer({ storage: storage });
+
+// --- API Endpoints ---
+
+// Endpoint to update user's text data (username, email)
+router.put("/:id", authMiddleware, async (req, res) => {
+  // Ensure the logged-in user can only update their own profile
+  if (req.user.id !== parseInt(req.params.id)) {
+    return res
+      .status(403)
+      .json({ message: "Forbidden: You can only update your own profile." });
+  }
+
+  const { username, email } = req.body;
+  try {
+    const result = await db.query(
+      "UPDATE users SET username = $1, email = $2 WHERE id = $3 RETURNING id, username, email, is_admin, profile_photo_url",
+      [username, email, req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ message: "Profile updated successfully", user: result.rows[0] });
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Endpoint to upload a user's profile photo
+router.post(
+  "/:id/photo",
+  authMiddleware,
+  upload.single("profile_photo"),
+  async (req, res) => {
+    // Ensure the logged-in user can only update their own profile
+    if (req.user.id !== parseInt(req.params.id)) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: You can only update your own profile." });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded." });
+    }
+
+    // Construct the URL path for the uploaded file
+    const photoUrl = `/uploads/${req.file.filename}`;
+
+    try {
+      const result = await db.query(
+        "UPDATE users SET profile_photo_url = $1 WHERE id = $2 RETURNING id, username, email, is_admin, profile_photo_url",
+        [photoUrl, req.params.id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        message: "Photo uploaded successfully",
+        user: result.rows[0],
+      });
+    } catch (error) {
+      console.error("Error updating profile photo:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+export default router;
