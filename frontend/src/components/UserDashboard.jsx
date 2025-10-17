@@ -26,7 +26,13 @@ function UserDashboard() {
         console.error(error);
       }
     };
+
     fetchData();
+
+    // Cleanup function to cancel any ongoing requests
+    return () => {
+      // Add cleanup logic if needed
+    };
   }, []);
 
   return (
@@ -53,15 +59,14 @@ function UserDashboard() {
             {matches.map((match) => (
               <p key={match.id}>
                 Round {match.round}: {match.player1_id} vs {match.player2_id} -
-                Winner: {match.winner_id || "Pending"}
               </p>
             ))}
           </CardContent>
         </Card>
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-black p-4 sm:p-8">
-      <div className="container mx-auto">
-        <UserProfile />
-        {/* You can add other dashboard components here in the future */}
+        {/* The UserProfile component will span the full width on medium screens and up */}
+        <div className="md:col-span-2">
+          <UserProfile />
+        </div>
       </div>
     </div>
   );
