@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
+import { Bell, Trophy } from "lucide-react";
 
 function UserDashboard() {
   const [user, setUser] = useState(null);
   const [rankings, setRankings] = useState([]);
-  const [matches, setMatches] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [matches, setMatches] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,26 +22,29 @@ function UserDashboard() {
         }
 
         const token = localStorage.getItem("token");
-        const [rankingsRes, matchesRes, notificationsRes] = await Promise.all([
+        const [rankingsRes, notificationsRes, matchesRes] = await Promise.all([
           axios.get("/api/ranking", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          // Fetch matches specific to the logged-in user
-          axios.get("/api/user/matches", {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get("/api/notifications", {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          axios.get("/api/tournament/matches", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
         setRankings(rankingsRes.data);
-        setMatches(matchesRes.data);
         setNotifications(notificationsRes.data);
+        setMatches(matchesRes.data);
       } catch (error) {
         console.error("Dashboard error:", error);
       }
     };
+
     fetchData();
+    // Poll every 10 seconds for real-time updates
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {
@@ -68,7 +72,7 @@ function UserDashboard() {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-2xl font-bold">{user.username}</h2>
+                <p className="text-lg font-semibold">{user.username}</p>
                 <p className="text-gray-400">{user.email}</p>
               </div>
             </div>
@@ -95,57 +99,91 @@ function UserDashboard() {
         {/* Notifications Section */}
         <Card className="bg-gray-800 border-none mb-8">
           <CardHeader>
-            <CardTitle>Notifications</CardTitle>
+            <CardTitle className="flex items-center">
+              <Bell className="h-5 w-5 mr-2" />
+              Notifications
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {notifications.length === 0 ? (
               <p>No notifications.</p>
             ) : (
-              notifications.map((n) => (
-                <p key={n.id} className="text-sm text-blue-300">
-                  {n.message}
-                </p>
-              ))
+              <div className="space-y-2">
+                {notifications.map((n) => (
+                  <p
+                    key={n.id}
+                    className="text-sm text-blue-300 p-2 bg-gray-700 rounded"
+                  >
+                    {n.message}{" "}
+                    <span className="text-gray-500 text-xs">
+                      ({new Date(n.created_at).toLocaleString()})
+                    </span>
+                  </p>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
-        {/* Rankings and Matches */}
-        <h1 className="text-4xl font-bold mb-8 text-center">User Dashboard</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-gray-800 border-none">
-            <CardHeader>
-              <CardTitle>Your Rankings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {rankings.length === 0 ? (
-                <p>No rankings yet.</p>
-              ) : (
-                rankings.map((ranking) => (
-                  <p key={ranking.id}>
-                    Tournament: {ranking.tournament_id} - Rank: {ranking.rank}
-                  </p>
-                ))
-              )}
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-800 border-none">
-            <CardHeader>
-              <CardTitle>Match History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {matches.length === 0 ? (
-                <p>No matches yet.</p>
-              ) : (
-                matches.map((match) => (
-                  <p key={match.id}>
-                    Round {match.round}: {match.player1_id} vs{" "}
-                    {match.player2_id} - Winner: {match.winner_id || "Pending"}
-                  </p>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
+
+        {/* Rankings Section */}
+        <Card className="bg-gray-800 border-none mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Trophy className="h-5 w-5 mr-2" />
+              Your Rankings
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {rankings.length === 0 ? (
+              <p>No rankings yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {rankings.map((r) => (
+                  <div
+                    key={r.id}
+                    className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg"
+                  >
+                    <p className="font-semibold">
+                      {r.tournament_name}: Rank {r.rank}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Current Matches Section */}
+        <Card className="bg-gray-800 border-none">
+          <CardHeader>
+            <CardTitle>Your Matches</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {matches.length === 0 ? (
+              <p>No matches yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {matches
+                  .filter(
+                    (m) => m.player1_id === user.id || m.player2_id === user.id
+                  )
+                  .map((m) => (
+                    <div key={m.id} className="p-4 bg-gray-700 rounded-lg">
+                      <p className="font-semibold">
+                        Round {m.round}: {m.player1_username} vs{" "}
+                        {m.player2_username || "Bye"}
+                        {m.winner_username && (
+                          <span className="text-green-400 ml-2">
+                            (Winner: {m.winner_username})
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
