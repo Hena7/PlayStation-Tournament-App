@@ -76,6 +76,14 @@ CREATE TABLE rankings (
     tournament_id INTEGER REFERENCES tournaments(id),
     rank INTEGER NOT NULL
 );
+
+CREATE TABLE notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  tournament_id INTEGER REFERENCES tournaments(id),
+  message VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
 ## Setup Instructions

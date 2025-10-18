@@ -9,6 +9,7 @@ function UserDashboard() {
   const [user, setUser] = useState(null);
   const [rankings, setRankings] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,16 +21,21 @@ function UserDashboard() {
         }
 
         const token = localStorage.getItem("token");
-        const [rankingsRes, matchesRes] = await Promise.all([
+        const [rankingsRes, matchesRes, notificationsRes] = await Promise.all([
           axios.get("/api/ranking", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("/api/tournament/matches", {
+          // Fetch matches specific to the logged-in user
+          axios.get("/api/user/matches", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get("/api/notifications", {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
         setRankings(rankingsRes.data);
         setMatches(matchesRes.data);
+        setNotifications(notificationsRes.data);
       } catch (error) {
         console.error("Dashboard error:", error);
       }
@@ -85,6 +91,24 @@ function UserDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Notifications Section */}
+        <Card className="bg-gray-800 border-none mb-8">
+          <CardHeader>
+            <CardTitle>Notifications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {notifications.length === 0 ? (
+              <p>No notifications.</p>
+            ) : (
+              notifications.map((n) => (
+                <p key={n.id} className="text-sm text-blue-300">
+                  {n.message}
+                </p>
+              ))
+            )}
+          </CardContent>
+        </Card>
         {/* Rankings and Matches */}
         <h1 className="text-4xl font-bold mb-8 text-center">User Dashboard</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -23,7 +23,7 @@ router.get("/users", authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
-// Create tournament and pair players
+// Create tournament and pair all participants
 router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
   const { name, count } = req.body;
   try {
@@ -54,27 +54,65 @@ router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
       );
     }
 
-    // Randomly select two players for the first match
-    const selectedParticipants = participants
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2);
-    if (selectedParticipants.length === 2) {
+    // Shuffle participants for random pairing
+    let selectedParticipants = participants.sort(() => Math.random() - 0.5);
+    let byePlayer = null;
+    const round = 1;
+    const matches = [];
+
+    // Handle bye if there's an odd number of players
+    if (selectedParticipants.length % 2 !== 0) {
+      byePlayer = selectedParticipants.pop();
       await pool.query(
-        "INSERT INTO matches (tournament_id, player1_id, player2_id, round) VALUES ($1, $2, $3, $4)",
+        "INSERT INTO matches (tournament_id, player1_id, winner_id, round) VALUES ($1, $2, $3, $4) RETURNING id",
+        [tournament.id, byePlayer.id, byePlayer.id, round]
+      );
+      await pool.query(
+        "INSERT INTO notifications (user_id, tournament_id, message) VALUES ($1, $2, $3)",
         [
+          byePlayer.id,
           tournament.id,
-          selectedParticipants[0].id,
-          selectedParticipants[1].id,
-          1,
+          `You have a bye in Round ${round} and advance automatically.`,
         ]
       );
+    }
+
+    // Create matches for all participants
+    for (let i = 0; i < selectedParticipants.length; i += 2) {
+      const player1 = selectedParticipants[i];
+      const player2 = selectedParticipants[i + 1];
+      if (player1 && player2) {
+        const matchResult = await pool.query(
+          "INSERT INTO matches (tournament_id, player1_id, player2_id, round) VALUES ($1, $2, $3, $4) RETURNING id",
+          [tournament.id, player1.id, player2.id, round]
+        );
+        matches.push({
+          id: matchResult.rows[0].id,
+          player1_id: player1.id,
+          player2_id: player2.id,
+          player1_username: player1.username,
+          player2_username: player2.username,
+          round,
+        });
+        await pool.query(
+          "INSERT INTO notifications (user_id, tournament_id, message) VALUES ($1, $2, $3), ($4, $5, $6)",
+          [
+            player1.id,
+            tournament.id,
+            `You are paired against ${player2.username} in Round ${round}.`,
+            player2.id,
+            tournament.id,
+            `You are paired against ${player1.username} in Round ${round}.`,
+          ]
+        );
+      }
     }
 
     res.json({
       tournament,
       participants,
-      pairedPlayers:
-        selectedParticipants.length === 2 ? selectedParticipants : [],
+      matches,
+      byePlayer,
     });
   } catch (error) {
     console.error("Error creating tournament:", error);
@@ -100,5 +138,114 @@ router.get("/:tournamentId/matches", authMiddleware, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// Update match winner
+router.put(
+  "/matches/:matchId",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    const { matchId } = req.params;
+    const { winner_id } = req.body;
+    try {
+      const result = await pool.query(
+        "UPDATE matches SET winner_id = $1 WHERE id = $2 RETURNING *",
+        [winner_id, matchId]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Match not found" });
+      }
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Error updating match:", error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+// Create next round
+router.post(
+  "/:tournamentId/next-round",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const { tournamentId } = req.params;
+      const currentRoundResult = await pool.query(
+        "SELECT MAX(round) as current_round FROM matches WHERE tournament_id = $1",
+        [tournamentId]
+      );
+      const currentRound = currentRoundResult.rows[0].current_round || 0;
+      const winnersResult = await pool.query(
+        "SELECT winner_id, u.username, u.profile_photo_url " +
+          "FROM matches m JOIN users u ON m.winner_id = u.id " +
+          "WHERE m.tournament_id = $1 AND m.round = $2",
+        [tournamentId, currentRound]
+      );
+      let winners = winnersResult.rows.map((w) => ({
+        id: w.winner_id,
+        username: w.username,
+        profile_photo_url: w.profile_photo_url
+          ? `${req.protocol}://${req.get("host")}${w.profile_photo_url}`
+          : null,
+      }));
+      winners = winners.sort(() => Math.random() - 0.5);
+      const nextRound = currentRound + 1;
+      let byePlayer = null;
+      const matches = [];
+
+      if (winners.length % 2 !== 0) {
+        byePlayer = winners.pop();
+        await pool.query(
+          "INSERT INTO matches (tournament_id, player1_id, winner_id, round) VALUES ($1, $2, $3, $4)",
+          [tournamentId, byePlayer.id, byePlayer.id, nextRound]
+        );
+        await pool.query(
+          "INSERT INTO notifications (user_id, tournament_id, message) VALUES ($1, $2, $3)",
+          [
+            byePlayer.id,
+            tournamentId,
+            `You have a bye in Round ${nextRound} and advance automatically.`,
+          ]
+        );
+      }
+
+      for (let i = 0; i < winners.length; i += 2) {
+        const player1 = winners[i];
+        const player2 = winners[i + 1];
+        if (player1 && player2) {
+          const matchResult = await pool.query(
+            "INSERT INTO matches (tournament_id, player1_id, player2_id, round) VALUES ($1, $2, $3, $4) RETURNING id",
+            [tournamentId, player1.id, player2.id, nextRound]
+          );
+          matches.push({
+            id: matchResult.rows[0].id,
+            player1_id: player1.id,
+            player2_id: player2.id,
+            player1_username: player1.username,
+            player2_username: player2.username,
+            round: nextRound,
+          });
+          await pool.query(
+            "INSERT INTO notifications (user_id, tournament_id, message) VALUES ($1, $2, $3), ($4, $5, $6)",
+            [
+              player1.id,
+              tournamentId,
+              `You are paired against ${player2.username} in Round ${nextRound}.`,
+              player2.id,
+              tournamentId,
+              `You are paired against ${player1.username} in Round ${nextRound}.`,
+            ]
+          );
+        }
+      }
+
+      res.json({ matches, byePlayer });
+    } catch (error) {
+      console.error("Error creating next round:", error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
 
 export default router;
