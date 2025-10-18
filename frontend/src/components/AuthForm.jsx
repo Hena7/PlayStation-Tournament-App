@@ -13,23 +13,20 @@ function AuthForm() {
   });
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const API_BASE_URL = "http://localhost:5000";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const url = isLogin
-        ? `${API_BASE_URL}/api/auth/login`
-        : `${API_BASE_URL}/api/auth/register`;
-
+      const url = isLogin ? `/api/auth/login` : `/api/auth/register`;
+      console.log(url);
       const response = await axios.post(url, formData);
       localStorage.setItem("token", response.data.token);
       // Save the user object to localStorage
       localStorage.setItem("user", JSON.stringify(response.data.user));
       navigate(response.data.user.is_admin ? "/admin" : "/dashboard");
     } catch (error) {
-      console.error(error);
+      console.error("Auth error:", error);
     } finally {
       setIsLoading(false);
     }

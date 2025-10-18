@@ -9,13 +9,12 @@ function AdminPanel() {
   const [tournament, setTournament] = useState(null);
   const [matches, setMatches] = useState([]);
   const [rankings, setRankings] = useState([]);
-  const URL = "http://localhost:5000";
 
   const handleCreateTournament = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${URL}/api/tournament/create`,
+        `/api/tournament/create`,
         {
           name: `Tournament ${new Date().toISOString()}`,
           count: participantsCount,
@@ -32,7 +31,7 @@ function AdminPanel() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `${URL}/api/ranking`,
+        `/api/ranking`,
         { user_id: userId, tournament_id: tournament.id, rank },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -47,7 +46,7 @@ function AdminPanel() {
       if (tournament) {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          `${URL}/api/tournament/${tournament.id}/matches`,
+          `/api/tournament/${tournament.id}/matches`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

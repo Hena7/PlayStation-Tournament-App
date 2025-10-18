@@ -5,7 +5,9 @@ import { fileURLToPath } from "url";
 import "dotenv/config";
 
 import authRoutes from "./routes/auth.js";
-import usersRoutes from "./routes/users.js"; // Import the new user routes
+import rankingRoutes from "./routes/ranking.js";
+// import auserRoutes from "./routes/auser.js";
+import userRoutes from "./routes/user.js"; // Import the new user routes
 
 const app = express();
 
@@ -23,7 +25,9 @@ app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 // --- API Routes ---
 app.use("/api/auth", authRoutes);
-app.use("/api/users", usersRoutes); // Use the new user routes
+app.use("/api/user", userRoutes); // Use the new user routes
+app.use("/api/ranking", rankingRoutes);
+// app.use("/api/auser", auserRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
