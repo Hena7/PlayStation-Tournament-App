@@ -1,51 +1,87 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../lib/api";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useNavigate } from "react-router-dom";
-import { Bell, Trophy } from "lucide-react";
+import { Bell, Trophy, AlertCircle } from "lucide-react";
+import TournamentApplication from "./TournamentApplication";
 
 function UserDashboard() {
   const [user, setUser] = useState(null);
   const [rankings, setRankings] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError(null);
         const storedUser = JSON.parse(localStorage.getItem("user"));
         if (storedUser) {
           setUser(storedUser);
         }
 
         const token = localStorage.getItem("token");
-        const [rankingsRes, notificationsRes, matchesRes] = await Promise.all([
+        // Fetch latest tournament to get tournamentId
+        const tournamentRes = await axios.get("/api/tournament/latest", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const tournament = tournamentRes.data.tournament;
+
+        const promises = [
           axios.get("/api/ranking", {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get("/api/notifications", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("/api/tournament/matches", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+        ];
+
+        // Only fetch matches if a tournament exists
+        if (tournament) {
+          promises.push(
+            axios.get(`/api/tournament/${tournament.id}/matches`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+          );
+        }
+
+        const [rankingsRes, notificationsRes, matchesRes] = await Promise.all(
+          promises
+        );
         setRankings(rankingsRes.data);
         setNotifications(notificationsRes.data);
-        setMatches(matchesRes.data);
+        setMatches(tournament ? matchesRes.data : []);
       } catch (error) {
         console.error("Dashboard error:", error);
+        setError("Failed to load dashboard data. Please try again later.");
       }
     };
 
     fetchData();
-    // Poll every 10 seconds for real-time updates
     const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleApply = () => {
+    // Refresh notifications after applying
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("/api/notifications", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setNotifications(response.data);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        setError("Failed to load notifications. Please try again.");
+      }
+    };
+    fetchNotifications();
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -60,6 +96,16 @@ function UserDashboard() {
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-blue-900 to-black">
       <div className="max-w-4xl mx-auto">
+        {/* Error Message */}
+        {error && (
+          <Card className="bg-red-900 border-none mb-8">
+            <CardContent className="flex items-center p-4">
+              <AlertCircle className="h-5 w-5 mr-2 text-white" />
+              <p className="text-white">{error}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* User Profile Section */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-xl mb-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -95,6 +141,9 @@ function UserDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Tournament Application */}
+        <TournamentApplication userId={user.id} onApply={handleApply} />
 
         {/* Notifications Section */}
         <Card className="bg-gray-800 border-none mb-8">

@@ -24,11 +24,10 @@ router.get("/users", authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // Get latest tournament
-router.get("/latest", authMiddleware, adminMiddleware, async (req, res) => {
+router.get("/latest", authMiddleware, async (req, res) => {
   try {
     const tournamentResult = await pool.query(
-      "SELECT * FROM tournaments WHERE admin_id = $1 ORDER BY id DESC LIMIT 1",
-      [req.user.id]
+      "SELECT * FROM tournaments ORDER BY id DESC LIMIT 1"
     );
     if (tournamentResult.rows.length === 0) {
       return res.json({
@@ -41,9 +40,9 @@ router.get("/latest", authMiddleware, adminMiddleware, async (req, res) => {
     const tournament = tournamentResult.rows[0];
 
     const participantsResult = await pool.query(
-      "SELECT u.id, u.username, u.profile_photo_url " +
+      "SELECT u.id, u.username, u.profile_photo_url, p.applied_at " +
         "FROM participants p JOIN users u ON p.user_id = u.id " +
-        "WHERE p.tournament_id = $1",
+        "WHERE p.tournament_id = $1 ORDER BY p.applied_at",
       [tournament.id]
     );
     const participants = participantsResult.rows.map((user) => ({
@@ -52,6 +51,12 @@ router.get("/latest", authMiddleware, adminMiddleware, async (req, res) => {
         ? `${req.protocol}://${req.get("host")}${user.profile_photo_url}`
         : null,
     }));
+
+    const participantCount = await pool.query(
+      "SELECT COUNT(*) as count FROM participants WHERE tournament_id = $1",
+      [tournament.id]
+    );
+    tournament.participant_count = parseInt(participantCount.rows[0].count);
 
     const matchesResult = await pool.query(
       "SELECT m.*, u1.username as player1_username, u2.username as player2_username, u3.username as winner_username " +
@@ -89,21 +94,123 @@ router.get("/latest", authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
-// Create tournament and pair all participants
+// Create tournament
 router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
-  const { name, count } = req.body;
+  const { name, max_players } = req.body;
   try {
-    // Create tournament
     const tournamentResult = await pool.query(
-      "INSERT INTO tournaments (name, admin_id) VALUES ($1, $2) RETURNING *",
-      [name, req.user.id]
+      "INSERT INTO tournaments (name, admin_id, max_players, is_open) VALUES ($1, $2, $3, $4) RETURNING *",
+      [name, req.user.id, max_players, true]
     );
     const tournament = tournamentResult.rows[0];
+    tournament.participant_count = 0;
+    res.json({ tournament, participants: [], matches: [], byePlayer: null });
+  } catch (error) {
+    console.error("Error creating tournament:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
-    // Select random participants
+// Apply to tournament
+router.post("/apply", authMiddleware, async (req, res) => {
+  try {
+    const tournamentResult = await pool.query(
+      "SELECT * FROM tournaments WHERE is_open = true ORDER BY id DESC LIMIT 1"
+    );
+    if (tournamentResult.rows.length === 0) {
+      return res.status(404).json({ message: "No open tournament found" });
+    }
+    const tournament = tournamentResult.rows[0];
+
+    const participantCount = await pool.query(
+      "SELECT COUNT(*) as count FROM participants WHERE tournament_id = $1",
+      [tournament.id]
+    );
+    if (parseInt(participantCount.rows[0].count) >= tournament.max_players) {
+      await pool.query("UPDATE tournaments SET is_open = false WHERE id = $1", [
+        tournament.id,
+      ]);
+      return res.status(400).json({ message: "Tournament is full" });
+    }
+
+    const existingParticipant = await pool.query(
+      "SELECT * FROM participants WHERE tournament_id = $1 AND user_id = $2",
+      [tournament.id, req.user.id]
+    );
+    if (existingParticipant.rows.length > 0) {
+      return res.status(400).json({ message: "You have already applied" });
+    }
+
+    await pool.query(
+      "INSERT INTO participants (user_id, tournament_id) VALUES ($1, $2)",
+      [req.user.id, tournament.id]
+    );
+    await pool.query(
+      "INSERT INTO notifications (user_id, tournament_id, message) VALUES ($1, $2, $3)",
+      [
+        req.user.id,
+        tournament.id,
+        `You have applied to participate in ${tournament.name}.`,
+      ]
+    );
+
+    const participantCountAfter = await pool.query(
+      "SELECT COUNT(*) as count FROM participants WHERE tournament_id = $1",
+      [tournament.id]
+    );
+    if (
+      parseInt(participantCountAfter.rows[0].count) >= tournament.max_players
+    ) {
+      await pool.query("UPDATE tournaments SET is_open = false WHERE id = $1", [
+        tournament.id,
+      ]);
+    }
+
+    res.json({ message: "Successfully applied to tournament" });
+  } catch (error) {
+    console.error("Error applying to tournament:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Close tournament
+router.post("/close", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const tournamentResult = await pool.query(
+      "SELECT * FROM tournaments WHERE admin_id = $1 ORDER BY id DESC LIMIT 1",
+      [req.user.id]
+    );
+    if (tournamentResult.rows.length === 0) {
+      return res.status(404).json({ message: "No tournament found" });
+    }
+    const tournament = tournamentResult.rows[0];
+    await pool.query("UPDATE tournaments SET is_open = false WHERE id = $1", [
+      tournament.id,
+    ]);
+    res.json({ message: "Tournament closed successfully" });
+  } catch (error) {
+    console.error("Error closing tournament:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Start tournament (pair participants)
+router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const tournamentResult = await pool.query(
+      "SELECT * FROM tournaments WHERE admin_id = $1 ORDER BY id DESC LIMIT 1",
+      [req.user.id]
+    );
+    if (tournamentResult.rows.length === 0) {
+      return res.status(404).json({ message: "No tournament found" });
+    }
+    const tournament = tournamentResult.rows[0];
+
     const participantsResult = await pool.query(
-      "SELECT id, username, profile_photo_url FROM users WHERE id != $1 AND is_admin = false ORDER BY RANDOM() LIMIT $2",
-      [req.user.id, count]
+      "SELECT u.id, u.username, u.profile_photo_url " +
+        "FROM participants p JOIN users u ON p.user_id = u.id " +
+        "WHERE p.tournament_id = $1 ORDER BY p.applied_at",
+      [tournament.id]
     );
     const participants = participantsResult.rows.map((user) => ({
       ...user,
@@ -112,21 +219,21 @@ router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
         : null,
     }));
 
-    // Add participants to the tournament
-    for (const participant of participants) {
-      await pool.query(
-        "INSERT INTO participants (user_id, tournament_id) VALUES ($1, $2)",
-        [participant.id, tournament.id]
-      );
+    if (participants.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No participants in the tournament" });
     }
 
-    // Shuffle participants for random pairing
+    await pool.query("UPDATE tournaments SET is_open = false WHERE id = $1", [
+      tournament.id,
+    ]);
+
     let selectedParticipants = participants.sort(() => Math.random() - 0.5);
     let byePlayer = null;
     const round = 1;
     const matches = [];
 
-    // Handle bye if there's an odd number of players
     if (selectedParticipants.length % 2 !== 0) {
       byePlayer = selectedParticipants.pop();
       await pool.query(
@@ -143,7 +250,6 @@ router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
       );
     }
 
-    // Create matches for all participants
     for (let i = 0; i < selectedParticipants.length; i += 2) {
       const player1 = selectedParticipants[i];
       const player2 = selectedParticipants[i + 1];
@@ -174,9 +280,10 @@ router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
       }
     }
 
+    tournament.participant_count = participants.length;
     res.json({ tournament, participants, matches, byePlayer });
   } catch (error) {
-    console.error("Error creating tournament:", error);
+    console.error("Error starting tournament:", error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -184,6 +291,26 @@ router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
 // Get matches for a tournament
 router.get("/:tournamentId/matches", authMiddleware, async (req, res) => {
   try {
+    // Verify user is a participant or admin
+    const tournamentResult = await pool.query(
+      "SELECT * FROM tournaments WHERE id = $1",
+      [req.params.tournamentId]
+    );
+    if (tournamentResult.rows.length === 0) {
+      return res.status(404).json({ message: "Tournament not found" });
+    }
+
+    const participantResult = await pool.query(
+      "SELECT * FROM participants WHERE tournament_id = $1 AND user_id = $2",
+      [req.params.tournamentId, req.user.id]
+    );
+    const isAdmin = tournamentResult.rows[0].admin_id === req.user.id;
+    if (!isAdmin && participantResult.rows.length === 0) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to view matches" });
+    }
+
     const result = await pool.query(
       "SELECT m.*, u1.username as player1_username, u2.username as player2_username, u3.username as winner_username " +
         "FROM matches m " +

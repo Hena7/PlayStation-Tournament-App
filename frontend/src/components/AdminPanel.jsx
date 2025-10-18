@@ -1,30 +1,30 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import axios from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, Trash2 } from "lucide-react";
+import TournamentCreation from "./TournamentCreation";
+import UserList from "./UserList";
+import ParticipantList from "./ParticipantList";
+import TournamentControls from "./TournamentControls";
+import BracketDisplay from "./BracketDisplay";
+import RankingManagement from "./RankingManagement";
 
 function AdminPanel() {
   const [user, setUser] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
-  const [participantsCount, setParticipantsCount] = useState(10);
   const [tournament, setTournament] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [matches, setMatches] = useState([]);
   const [byePlayer, setByePlayer] = useState(null);
-  const [rankings, setRankings] = useState([]);
   const [profilePicFile, setProfilePicFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSelectingWinner, setIsSelectingWinner] = useState(null);
-  const [isResetting, setIsResetting] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch user data, all users, and latest tournament
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -57,96 +57,43 @@ function AdminPanel() {
     fetchData();
   }, []);
 
-  const handleCreateTournament = async () => {
+  const handleCreateTournament = (data) => {
+    setTournament(data.tournament);
+    setParticipants(data.participants);
+    setMatches(data.matches);
+    setByePlayer(data.byePlayer);
+  };
+
+  const handleCloseTournament = () => {
+    setTournament({ ...tournament, is_open: false });
+  };
+
+  const handleResetTournament = () => {
+    setTournament(null);
+    setParticipants([]);
+    setMatches([]);
+    setByePlayer(null);
+  };
+
+  const handleStartTournament = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "/api/tournament/create",
-        {
-          name: `Tournament ${new Date().toISOString()}`,
-          count: participantsCount,
-        },
+        "/api/tournament/start",
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTournament(response.data.tournament);
       setParticipants(response.data.participants);
       setMatches(response.data.matches);
       setByePlayer(response.data.byePlayer);
-      setRankings([]);
     } catch (error) {
-      console.error("Error creating tournament:", error);
+      console.error("Error starting tournament:", error);
     }
   };
 
-  const handleNextRound = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `/api/tournament/${tournament.id}/next-round`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setMatches((prevMatches) => [...prevMatches, ...response.data.matches]);
-      setByePlayer(response.data.byePlayer);
-    } catch (error) {
-      console.error("Error creating next round:", error);
-    }
-  };
-
-  const handleUpdateRanking = async (matchId, winnerId) => {
-    setIsSelectingWinner(matchId);
-    try {
-      const token = localStorage.getItem("token");
-      const match = matches.find((m) => m.id === matchId);
-      await axios.post(
-        "/api/ranking",
-        { user_id: winnerId, tournament_id: tournament.id, rank: match.round },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      await axios.put(
-        `/api/tournament/matches/${matchId}`,
-        { winner_id: winnerId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const response = await axios.get(
-        `/api/tournament/${tournament.id}/matches`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setMatches(response.data);
-      setRankings([...rankings, { user_id: winnerId, rank: match.round }]);
-    } catch (error) {
-      console.error("Error updating ranking:", error);
-    } finally {
-      setIsSelectingWinner(null);
-    }
-  };
-
-  const handleResetTournament = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to reset the tournament? This will delete all matches, rankings, and participants."
-      )
-    ) {
-      return;
-    }
-    setIsResetting(true);
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete("/api/tournament/reset", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTournament(null);
-      setParticipants([]);
-      setMatches([]);
-      setByePlayer(null);
-      setRankings([]);
-    } catch (error) {
-      console.error("Error resetting tournament:", error);
-    } finally {
-      setIsResetting(false);
-    }
+  const handleUpdateMatches = (newMatches) => {
+    setMatches(newMatches);
   };
 
   const handleFileChange = (e) => {
@@ -204,17 +151,6 @@ function AdminPanel() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/");
-  };
-
-  // Generate bracket visualization
-  const generateBracket = () => {
-    const maxRound = Math.max(...matches.map((m) => m.round), 0);
-    const rounds = [];
-    for (let round = 1; round <= maxRound; round++) {
-      const roundMatches = matches.filter((m) => m.round === round);
-      rounds.push({ round, matches: roundMatches });
-    }
-    return rounds;
   };
 
   if (!user) {
@@ -309,317 +245,85 @@ function AdminPanel() {
           </CardContent>
         </Card>
 
-        {/* Reset Tournament Button */}
-        <Card className="bg-gray-800 border-none mb-8">
-          <CardHeader>
-            <CardTitle>Reset Tournament</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={handleResetTournament}
-              className="bg-red-600 hover:bg-red-900"
-              disabled={isResetting || !tournament}
-            >
-              {isResetting ? (
-                <>
-                  <span className="animate-spin mr-2">⏳</span>
-                  Resetting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="h-5 w-5 mr-2" />
-                  Reset Tournament
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Tournament Creation */}
+        <TournamentCreation
+          onCreate={handleCreateTournament}
+          disabled={!!tournament}
+        />
 
-        {/* All Users Section */}
-        <Card className="bg-gray-800 border-none mb-8">
-          <CardHeader>
-            <CardTitle>All Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {allUsers.length === 0 ? (
-              <p>No users found.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {allUsers.map((u) => (
-                  <div
-                    key={u.id}
-                    className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg"
-                  >
-                    <Avatar className="h-12 w-12 border-2 border-primary">
-                      <AvatarImage src={u.profile_photo_url} alt={u.username} />
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                        {u.username.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold">{u.username}</p>
-                      <p className="text-sm text-gray-400">{u.email}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Tournament Controls */}
+        <TournamentControls
+          tournament={tournament}
+          onClose={handleCloseTournament}
+          onReset={handleResetTournament}
+        />
 
-        {/* Tournament Creation Section */}
-        <Card className="bg-gray-800 border-none mb-8">
-          <CardHeader>
-            <CardTitle>Create Tournament</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Input
-                type="number"
-                placeholder="Number of participants (e.g., 10 or 50)"
-                value={participantsCount}
-                onChange={(e) => setParticipantsCount(Number(e.target.value))}
-                className="w-full max-w-xs"
-                min={2}
-                max={50}
-                disabled={tournament} // Disable if a tournament exists
-              />
+        {/* All Users */}
+        <UserList users={allUsers} />
+
+        {/* Tournament Participants */}
+        {tournament && (
+          <ParticipantList
+            participants={participants}
+            maxPlayers={tournament.max_players}
+          />
+        )}
+
+        {/* Start Tournament Button */}
+        {tournament && participants.length > 0 && (
+          <Card className="bg-gray-800 border-none mb-8">
+            <CardHeader>
+              <CardTitle>Start Tournament</CardTitle>
+            </CardHeader>
+            <CardContent>
               <Button
-                onClick={handleCreateTournament}
-                className="bg-primary hover:bg-blue-700"
-                disabled={tournament} // Disable if a tournament exists
+                onClick={handleStartTournament}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={matches.length > 0}
               >
-                Create Tournament
+                Start Tournament
               </Button>
-            </div>
-            {participants.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-2">
-                  Selected Participants
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {participants.map((p) => (
-                    <div
-                      key={p.id}
-                      className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg"
-                    >
-                      <Avatar className="h-10 w-10 border-2 border-primary">
-                        <AvatarImage
-                          src={p.profile_photo_url}
-                          alt={p.username}
-                        />
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                          {p.username.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <p className="font-semibold">{p.username}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {matches.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-2">Round 1 Matches</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {matches
-                    .filter((m) => m.round === 1)
-                    .map((match) => (
-                      <div
-                        key={match.id}
-                        className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <Avatar className="h-10 w-10 border-2 border-primary">
-                            <AvatarImage
-                              src={
-                                participants.find(
-                                  (p) => p.id === match.player1_id
-                                )?.profile_photo_url
-                              }
-                              alt={match.player1_username}
-                            />
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                              {match.player1_username?.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p>{match.player1_username}</p>
-                        </div>
-                        <span>vs</span>
-                        {match.player2_id ? (
-                          <div className="flex items-center space-x-2">
-                            <Avatar className="h-10 w-10 border-2 border-primary">
-                              <AvatarImage
-                                src={
-                                  participants.find(
-                                    (p) => p.id === match.player2_id
-                                  )?.profile_photo_url
-                                }
-                                alt={match.player2_username}
-                              />
-                              <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                                {match.player2_username
-                                  ?.charAt(0)
-                                  .toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <p>{match.player2_username}</p>
-                          </div>
-                        ) : (
-                          <p>Bye</p>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
-            {byePlayer && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-2">Bye Player</h3>
-                <div className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg">
-                  <Avatar className="h-10 w-10 border-2 border-primary">
-                    <AvatarImage
-                      src={byePlayer.profile_photo_url}
-                      alt={byePlayer.username}
-                    />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                      {byePlayer.username.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <p className="font-semibold">
-                    {byePlayer.username} (Advances to next round)
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Tournament Bracket Section */}
-        <Card className="bg-gray-800 border-none mb-8">
-          <CardHeader>
-            <CardTitle>Tournament Bracket</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {matches.length === 0 ? (
-              <p>No matches to display in bracket.</p>
-            ) : (
-              <div className="space-y-6">
-                {generateBracket().map((round) => (
-                  <div
-                    key={round.round}
-                    className="border-l-4 border-primary pl-4"
-                  >
-                    <h4 className="text-lg font-semibold mb-2">
-                      Round {round.round}
-                    </h4>
-                    <div className="space-y-4">
-                      {round.matches.map((match) => (
-                        <div
-                          key={match.id}
-                          className="flex items-center justify-between p-4 bg-gray-700 rounded-lg"
-                        >
-                          <div className="flex items-center space-x-4">
-                            <p>
-                              {match.player1_username} vs{" "}
-                              {match.player2_username || "Bye"}
-                              {match.winner_username && (
-                                <span className="text-green-400 ml-2">
-                                  (Winner: {match.winner_username})
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+        {/* Bye Player */}
+        {byePlayer && (
+          <Card className="bg-gray-800 border-none mb-8">
+            <CardHeader>
+              <CardTitle>Bye Player</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg">
+                <Avatar className="h-10 w-10 border-2 border-primary">
+                  <AvatarImage
+                    src={byePlayer.profile_photo_url}
+                    alt={byePlayer.username}
+                  />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
+                    {byePlayer.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <p className="font-semibold">
+                  {byePlayer.username} (Advances to next round)
+                </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Manage Rankings Section */}
-        <Card className="bg-gray-800 border-none">
-          <CardHeader>
-            <CardTitle>Manage Rankings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {matches.length === 0 ? (
-              <p>No matches available.</p>
-            ) : (
-              <>
-                {matches
-                  .filter((match) => !match.winner_id)
-                  .map((match) => (
-                    <div key={match.id} className="mb-4">
-                      <p className="font-semibold flex items-center">
-                        Round {match.round}: {match.player1_username} vs{" "}
-                        {match.player2_username || "Bye"}
-                        {match.winner_username && (
-                          <span className="text-green-400 ml-2 flex items-center">
-                            <CheckCircle className="h-5 w-5 mr-1" />
-                            Winner: {match.winner_username}
-                          </span>
-                        )}
-                      </p>
-                      {!match.winner_id && match.player2_id && (
-                        <div className="flex space-x-2 mt-2">
-                          <Button
-                            onClick={() =>
-                              handleUpdateRanking(match.id, match.player1_id)
-                            }
-                            className="bg-primary hover:bg-blue-700"
-                            disabled={isSelectingWinner === match.id}
-                          >
-                            {isSelectingWinner === match.id ? (
-                              <>
-                                <span className="animate-spin mr-2">⏳</span>
-                                Selecting...
-                              </>
-                            ) : (
-                              `Select ${match.player1_username} as Winner`
-                            )}
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleUpdateRanking(match.id, match.player2_id)
-                            }
-                            className="bg-primary hover:bg-blue-700"
-                            disabled={isSelectingWinner === match.id}
-                          >
-                            {isSelectingWinner === match.id ? (
-                              <>
-                                <span className="animate-spin mr-2">⏳</span>
-                                Selecting...
-                              </>
-                            ) : (
-                              `Select ${match.player2_username} as Winner`
-                            )}
-                          </Button>
-                        </div>
-                      )}
-                      {!match.winner_id && !match.player2_id && (
-                        <p className="text-green-400 flex items-center mt-2">
-                          <CheckCircle className="h-5 w-5 mr-1" />
-                          Auto-advanced: {match.player1_username} (Bye)
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                {matches.every((m) => m.winner_id) && (
-                  <Button
-                    onClick={handleNextRound}
-                    className="mt-4 bg-primary hover:bg-blue-700"
-                  >
-                    Start Next Round
-                  </Button>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+        {/* Tournament Bracket */}
+        <BracketDisplay matches={matches} />
+
+        {/* Manage Rankings */}
+        {tournament && matches.length > 0 && (
+          <RankingManagement
+            tournament={tournament}
+            matches={matches}
+            participants={participants}
+            onUpdate={handleUpdateMatches}
+          />
+        )}
       </div>
     </div>
   );

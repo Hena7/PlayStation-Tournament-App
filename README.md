@@ -86,6 +86,96 @@ CREATE TABLE notifications (
 );
 ```
 
+DROP TABLE IF EXISTS rankings;
+DROP TABLE IF EXISTS matches;
+DROP TABLE IF EXISTS participants;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS tournaments;
+
+CREATE TABLE tournaments (
+id SERIAL PRIMARY KEY,
+name VARCHAR(255) NOT NULL,
+admin_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE participants (
+id SERIAL PRIMARY KEY,
+user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE matches (
+id SERIAL PRIMARY KEY,
+tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+player1_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+player2_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+winner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+round INTEGER NOT NULL
+);
+
+CREATE TABLE rankings (
+id SERIAL PRIMARY KEY,
+user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+rank INTEGER NOT NULL
+);
+
+CREATE TABLE notifications (
+id SERIAL PRIMARY KEY,
+user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+message VARCHAR(255) NOT NULL,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+````
+```sql
+DROP TABLE IF EXISTS rankings;
+DROP TABLE IF EXISTS matches;
+DROP TABLE IF EXISTS participants;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS tournaments;
+
+CREATE TABLE tournaments (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  admin_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  max_players INTEGER NOT NULL,
+  is_open BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE participants (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+  applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE matches (
+  id SERIAL PRIMARY KEY,
+  tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+  player1_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  player2_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  winner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  round INTEGER NOT NULL
+);
+
+CREATE TABLE rankings (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+  rank INTEGER NOT NULL
+);
+
+CREATE TABLE notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+  message VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+````
+
 ## Setup Instructions
 
 1. **Backend**:
@@ -114,3 +204,7 @@ CREATE TABLE notifications (
 - The interface uses a dark theme with a blue gradient for a modern, gaming-inspired aesthetic.
 - Shadcn/ui components ensure a polished and accessible UI.
 - Responsive design works on both desktop and mobile devices.
+
+```
+
+```
