@@ -1,10 +1,11 @@
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { CheckCircle } from "lucide-react";
 
 function AdminPanel() {
   const [user, setUser] = useState(null);
@@ -19,6 +20,7 @@ function AdminPanel() {
   const [preview, setPreview] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSelectingWinner, setIsSelectingWinner] = useState(null);
   const navigate = useNavigate();
 
   // Fetch user data and all users
@@ -102,16 +104,14 @@ function AdminPanel() {
   };
 
   const handleUpdateRanking = async (matchId, winnerId) => {
+    setIsSelectingWinner(matchId);
     try {
       const token = localStorage.getItem("token");
       const match = matches.find((m) => m.id === matchId);
+      // Post to rankings
       await axios.post(
         "/api/ranking",
-        {
-          user_id: winnerId,
-          tournament_id: tournament.id,
-          rank: matches.length - match.round + 1,
-        },
+        { user_id: winnerId, tournament_id: tournament.id, rank: match.round },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Update match winner
@@ -120,10 +120,6 @@ function AdminPanel() {
         { winner_id: winnerId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setRankings([
-        ...rankings,
-        { user_id: winnerId, rank: matches.length - match.round + 1 },
-      ]);
       // Refresh matches
       const response = await axios.get(
         `/api/tournament/${tournament.id}/matches`,
@@ -132,8 +128,11 @@ function AdminPanel() {
         }
       );
       setMatches(response.data);
+      setRankings([...rankings, { user_id: winnerId, rank: match.round }]);
     } catch (error) {
       console.error("Error updating ranking:", error);
+    } finally {
+      setIsSelectingWinner(null);
     }
   };
 
@@ -514,13 +513,13 @@ function AdminPanel() {
                   .filter((match) => !match.winner_id)
                   .map((match) => (
                     <div key={match.id} className="mb-4">
-                      <p className="font-semibold">
+                      <p className="font-semibold flex items-center">
                         Round {match.round}: {match.player1_username} vs{" "}
                         {match.player2_username || "Bye"}
                         {match.winner_username && (
-                          <span className="text-green-400">
-                            {" "}
-                            - Winner: {match.winner_username}
+                          <span className="text-green-400 ml-2 flex items-center">
+                            <CheckCircle className="h-5 w-5 mr-1" />
+                            Winner: {match.winner_username}
                           </span>
                         )}
                       </p>
@@ -531,18 +530,40 @@ function AdminPanel() {
                               handleUpdateRanking(match.id, match.player1_id)
                             }
                             className="bg-primary hover:bg-blue-700"
+                            disabled={isSelectingWinner === match.id}
                           >
-                            Select {match.player1_username} as Winner
+                            {isSelectingWinner === match.id ? (
+                              <>
+                                <span className="animate-spin mr-2">⏳</span>
+                                Selecting...
+                              </>
+                            ) : (
+                              `Select ${match.player1_username} as Winner`
+                            )}
                           </Button>
                           <Button
                             onClick={() =>
                               handleUpdateRanking(match.id, match.player2_id)
                             }
                             className="bg-primary hover:bg-blue-700"
+                            disabled={isSelectingWinner === match.id}
                           >
-                            Select {match.player2_username} as Winner
+                            {isSelectingWinner === match.id ? (
+                              <>
+                                <span className="animate-spin mr-2">⏳</span>
+                                Selecting...
+                              </>
+                            ) : (
+                              `Select ${match.player2_username} as Winner`
+                            )}
                           </Button>
                         </div>
+                      )}
+                      {!match.winner_id && !match.player2_id && (
+                        <p className="text-green-400 flex items-center mt-2">
+                          <CheckCircle className="h-5 w-5 mr-1" />
+                          Auto-advanced: {match.player1_username} (Bye)
+                        </p>
                       )}
                     </div>
                   ))}
