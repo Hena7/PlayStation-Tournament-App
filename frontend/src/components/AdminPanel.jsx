@@ -5,7 +5,7 @@ import { Input } from "./ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Trash2 } from "lucide-react";
 
 function AdminPanel() {
   const [user, setUser] = useState(null);
@@ -21,9 +21,10 @@ function AdminPanel() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSelectingWinner, setIsSelectingWinner] = useState(null);
+  const [isResetting, setIsResetting] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch user data and all users
+  // Fetch user data, all users, and latest tournament
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -36,37 +37,25 @@ function AdminPanel() {
         }
 
         const token = localStorage.getItem("token");
-        const usersResponse = await axios.get("/api/tournament/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const [usersResponse, tournamentResponse] = await Promise.all([
+          axios.get("/api/tournament/users", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get("/api/tournament/latest", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
         setAllUsers(usersResponse.data);
+        setTournament(tournamentResponse.data.tournament);
+        setParticipants(tournamentResponse.data.participants);
+        setMatches(tournamentResponse.data.matches);
+        setByePlayer(tournamentResponse.data.byePlayer);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
     fetchData();
   }, []);
-
-  // Fetch matches when tournament changes
-  useEffect(() => {
-    const fetchMatches = async () => {
-      if (tournament) {
-        try {
-          const token = localStorage.getItem("token");
-          const response = await axios.get(
-            `/api/tournament/${tournament.id}/matches`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          setMatches(response.data);
-        } catch (error) {
-          console.error("Error fetching matches:", error);
-        }
-      }
-    };
-    fetchMatches();
-  }, [tournament]);
 
   const handleCreateTournament = async () => {
     try {
@@ -83,6 +72,7 @@ function AdminPanel() {
       setParticipants(response.data.participants);
       setMatches(response.data.matches);
       setByePlayer(response.data.byePlayer);
+      setRankings([]);
     } catch (error) {
       console.error("Error creating tournament:", error);
     }
@@ -108,19 +98,16 @@ function AdminPanel() {
     try {
       const token = localStorage.getItem("token");
       const match = matches.find((m) => m.id === matchId);
-      // Post to rankings
       await axios.post(
         "/api/ranking",
         { user_id: winnerId, tournament_id: tournament.id, rank: match.round },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Update match winner
       await axios.put(
         `/api/tournament/matches/${matchId}`,
         { winner_id: winnerId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Refresh matches
       const response = await axios.get(
         `/api/tournament/${tournament.id}/matches`,
         {
@@ -133,6 +120,32 @@ function AdminPanel() {
       console.error("Error updating ranking:", error);
     } finally {
       setIsSelectingWinner(null);
+    }
+  };
+
+  const handleResetTournament = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to reset the tournament? This will delete all matches, rankings, and participants."
+      )
+    ) {
+      return;
+    }
+    setIsResetting(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete("/api/tournament/reset", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTournament(null);
+      setParticipants([]);
+      setMatches([]);
+      setByePlayer(null);
+      setRankings([]);
+    } catch (error) {
+      console.error("Error resetting tournament:", error);
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -296,6 +309,32 @@ function AdminPanel() {
           </CardContent>
         </Card>
 
+        {/* Reset Tournament Button */}
+        <Card className="bg-gray-800 border-none mb-8">
+          <CardHeader>
+            <CardTitle>Reset Tournament</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleResetTournament}
+              className="bg-red-600 hover:bg-red-900"
+              disabled={isResetting || !tournament}
+            >
+              {isResetting ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Resetting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-5 w-5 mr-2" />
+                  Reset Tournament
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* All Users Section */}
         <Card className="bg-gray-800 border-none mb-8">
           <CardHeader>
@@ -343,10 +382,12 @@ function AdminPanel() {
                 className="w-full max-w-xs"
                 min={2}
                 max={50}
+                disabled={tournament} // Disable if a tournament exists
               />
               <Button
                 onClick={handleCreateTournament}
                 className="bg-primary hover:bg-blue-700"
+                disabled={tournament} // Disable if a tournament exists
               >
                 Create Tournament
               </Button>

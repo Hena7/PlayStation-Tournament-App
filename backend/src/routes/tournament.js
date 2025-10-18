@@ -23,6 +23,72 @@ router.get("/users", authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
+// Get latest tournament
+router.get("/latest", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const tournamentResult = await pool.query(
+      "SELECT * FROM tournaments WHERE admin_id = $1 ORDER BY id DESC LIMIT 1",
+      [req.user.id]
+    );
+    if (tournamentResult.rows.length === 0) {
+      return res.json({
+        tournament: null,
+        participants: [],
+        matches: [],
+        byePlayer: null,
+      });
+    }
+    const tournament = tournamentResult.rows[0];
+
+    const participantsResult = await pool.query(
+      "SELECT u.id, u.username, u.profile_photo_url " +
+        "FROM participants p JOIN users u ON p.user_id = u.id " +
+        "WHERE p.tournament_id = $1",
+      [tournament.id]
+    );
+    const participants = participantsResult.rows.map((user) => ({
+      ...user,
+      profile_photo_url: user.profile_photo_url
+        ? `${req.protocol}://${req.get("host")}${user.profile_photo_url}`
+        : null,
+    }));
+
+    const matchesResult = await pool.query(
+      "SELECT m.*, u1.username as player1_username, u2.username as player2_username, u3.username as winner_username " +
+        "FROM matches m " +
+        "LEFT JOIN users u1 ON m.player1_id = u1.id " +
+        "LEFT JOIN users u2 ON m.player2_id = u2.id " +
+        "LEFT JOIN users u3 ON m.winner_id = u3.id " +
+        "WHERE m.tournament_id = $1",
+      [tournament.id]
+    );
+    const matches = matchesResult.rows;
+
+    const byePlayerResult = await pool.query(
+      "SELECT u.id, u.username, u.profile_photo_url " +
+        "FROM matches m JOIN users u ON m.player1_id = u.id " +
+        "WHERE m.tournament_id = $1 AND m.player2_id IS NULL AND m.round = 1",
+      [tournament.id]
+    );
+    const byePlayer = byePlayerResult.rows[0]
+      ? {
+          id: byePlayerResult.rows[0].id,
+          username: byePlayerResult.rows[0].username,
+          profile_photo_url: byePlayerResult.rows[0].profile_photo_url
+            ? `${req.protocol}://${req.get("host")}${
+                byePlayerResult.rows[0].profile_photo_url
+              }`
+            : null,
+        }
+      : null;
+
+    res.json({ tournament, participants, matches, byePlayer });
+  } catch (error) {
+    console.error("Error fetching latest tournament:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Create tournament and pair all participants
 router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
   const { name, count } = req.body;
@@ -108,12 +174,7 @@ router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
       }
     }
 
-    res.json({
-      tournament,
-      participants,
-      matches,
-      byePlayer,
-    });
+    res.json({ tournament, participants, matches, byePlayer });
   } catch (error) {
     console.error("Error creating tournament:", error);
     res.status(500).json({ message: error.message });
@@ -247,5 +308,34 @@ router.post(
     }
   }
 );
+
+// Reset tournament data
+router.delete("/reset", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    await pool.query(
+      "DELETE FROM rankings WHERE tournament_id IN (SELECT id FROM tournaments WHERE admin_id = $1)",
+      [req.user.id]
+    );
+    await pool.query(
+      "DELETE FROM matches WHERE tournament_id IN (SELECT id FROM tournaments WHERE admin_id = $1)",
+      [req.user.id]
+    );
+    await pool.query(
+      "DELETE FROM participants WHERE tournament_id IN (SELECT id FROM tournaments WHERE admin_id = $1)",
+      [req.user.id]
+    );
+    await pool.query(
+      "DELETE FROM notifications WHERE tournament_id IN (SELECT id FROM tournaments WHERE admin_id = $1)",
+      [req.user.id]
+    );
+    await pool.query("DELETE FROM tournaments WHERE admin_id = $1", [
+      req.user.id,
+    ]);
+    res.json({ message: "Tournament data reset successfully" });
+  } catch (error) {
+    console.error("Error resetting tournament:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
 export default router;
