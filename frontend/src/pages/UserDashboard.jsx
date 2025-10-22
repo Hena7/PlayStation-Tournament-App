@@ -28,7 +28,6 @@ function UserDashboard() {
         if (storedUser) {
           setUser(storedUser);
         }
-
         const token = localStorage.getItem("token");
         // Fetch latest tournament to get tournamentId
         const tournamentRes = await axios.get("/api/tournament/latest", {
@@ -36,7 +35,6 @@ function UserDashboard() {
         });
         const tournament = tournamentRes.data.tournament;
         const matches = tournamentRes.data.matches;
-
         const promises = [
           axios.get("/api/ranking", {
             headers: { Authorization: `Bearer ${token}` },
@@ -45,10 +43,7 @@ function UserDashboard() {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ];
-
-        const [rankingsRes, notificationsRes] = await Promise.all(
-          promises
-        );
+        const [rankingsRes, notificationsRes] = await Promise.all(promises);
         setRankings(rankingsRes.data);
         setNotifications(notificationsRes.data);
         setMatches(tournament ? matches : []);
@@ -57,7 +52,6 @@ function UserDashboard() {
         setError("Failed to load dashboard data. Please try again later.");
       }
     };
-
     fetchData();
     const interval = setInterval(fetchData, 90000);
     return () => clearInterval(interval);
@@ -102,14 +96,13 @@ function UserDashboard() {
             </CardContent>
           </Card>
         )}
-
         {/* User Profile Section */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-xl mb-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             {/* User Info */}
             <div className="flex items-center space-x-4">
               <Avatar className="h-16 w-16 border-2 border-primary">
-                <AvatarImage src={user.profile_photo_url} alt={user.username} />
+                <AvatarImage src={user.avatar_url} alt={user.username} />
                 <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
                   {user.username.charAt(0).toUpperCase()}
                 </AvatarFallback>
@@ -119,7 +112,6 @@ function UserDashboard() {
                 <p className="text-gray-400">{user.email}</p>
               </div>
             </div>
-
             {/* Action Buttons */}
             <div className="flex items-center space-x-2 pt-4 sm:pt-0">
               <Button
@@ -138,10 +130,8 @@ function UserDashboard() {
             </div>
           </div>
         </div>
-
         {/* Tournament Application */}
         <TournamentApplication userId={user.id} onApply={handleApply} />
-
         {/* Notifications Section */}
         <Card className="bg-gray-800 border-none mb-8">
           <CardHeader>
@@ -170,7 +160,6 @@ function UserDashboard() {
             )}
           </CardContent>
         </Card>
-
         {/* Rankings Section */}
         <Card className="bg-gray-800 border-none mb-8">
           <CardHeader>
@@ -198,7 +187,6 @@ function UserDashboard() {
             )}
           </CardContent>
         </Card>
-
         {/* Current Matches Section */}
         <Card className="bg-gray-800 border-none">
           <CardHeader>
@@ -215,14 +203,44 @@ function UserDashboard() {
                   )
                   .map((m) => (
                     <div key={m.id} className="p-4 bg-gray-700 rounded-lg">
-                      <p className="font-semibold">
-                        Round {m.round}: {m.player1_username} vs{" "}
-                        {m.player2_username || "Bye"}
+                      <div className="flex items-center space-x-4">
+                        {/* Player 1 Avatar */}
+                        <Avatar className="h-10 w-10 border-2 border-primary">
+                          <AvatarImage
+                            src={m.player1_avatar_url}
+                            alt={m.player1_username}
+                          />
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
+                            {m.player1_username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <p className="font-semibold">{m.player1_username}</p>
+                        <span>vs</span>
+                        {/* Player 2 Avatar or Bye */}
+                        {m.player2_id ? (
+                          <Avatar className="h-10 w-10 border-2 border-primary">
+                            <AvatarImage
+                              src={m.player2_avatar_url}
+                              alt={m.player2_username}
+                            />
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
+                              {m.player2_username.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        ) : (
+                          <span>Bye</span>
+                        )}
+                        {m.player2_id && (
+                          <p className="font-semibold">{m.player2_username}</p>
+                        )}
                         {m.winner_username && (
                           <span className="text-green-400 ml-2">
                             (Winner: {m.winner_username})
                           </span>
                         )}
+                      </div>
+                      <p className="text-sm text-gray-400 mt-2">
+                        Round {m.round}
                       </p>
                     </div>
                   ))}

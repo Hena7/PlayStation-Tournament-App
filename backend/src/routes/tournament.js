@@ -59,7 +59,7 @@ router.get("/latest", authMiddleware, async (req, res) => {
     tournament.participant_count = parseInt(participantCount.rows[0].count);
 
     const matchesResult = await pool.query(
-      "SELECT m.*, u1.username as player1_username, u2.username as player2_username, u3.username as winner_username " +
+      "SELECT m.*, u1.username as player1_username, u1.profile_photo_url as player1_profile_photo_url, u2.username as player2_username, u2.profile_photo_url as player2_profile_photo_url, u3.username as winner_username " +
         "FROM matches m " +
         "LEFT JOIN users u1 ON m.player1_id = u1.id " +
         "LEFT JOIN users u2 ON m.player2_id = u2.id " +
@@ -67,7 +67,19 @@ router.get("/latest", authMiddleware, async (req, res) => {
         "WHERE m.tournament_id = $1",
       [tournament.id]
     );
-    const matches = matchesResult.rows;
+    const matches = matchesResult.rows.map((match) => ({
+      ...match,
+      player1_avatar_url: match.player1_profile_photo_url
+        ? `${req.protocol}://${req.get("host")}${
+            match.player1_profile_photo_url
+          }`
+        : null,
+      player2_avatar_url: match.player2_profile_photo_url
+        ? `${req.protocol}://${req.get("host")}${
+            match.player2_profile_photo_url
+          }`
+        : null,
+    }));
 
     const byePlayerResult = await pool.query(
       "SELECT u.id, u.username, u.profile_photo_url " +
@@ -248,6 +260,18 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
           `You have a bye in Round ${round} and advance automatically.`,
         ]
       );
+      matches.push({
+        id: tournament.id,
+        player1_id: byePlayer.id,
+        player1_username: byePlayer.username,
+        player1_avatar_url: byePlayer.profile_photo_url,
+        player2_id: null,
+        player2_username: null,
+        player2_avatar_url: null,
+        winner_id: byePlayer.id,
+        winner_username: byePlayer.username,
+        round,
+      });
     }
 
     for (let i = 0; i < selectedParticipants.length; i += 2) {
@@ -263,7 +287,9 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
           player1_id: player1.id,
           player2_id: player2.id,
           player1_username: player1.username,
+          player1_avatar_url: player1.profile_photo_url,
           player2_username: player2.username,
+          player2_avatar_url: player2.profile_photo_url,
           round,
         });
         await pool.query(
@@ -322,12 +348,12 @@ router.get("/:tournamentId/matches", authMiddleware, async (req, res) => {
     );
     const matches = result.rows.map((match) => ({
       ...match,
-      player1_profile_photo_url: match.player1_profile_photo_url
+      player1_avatar_url: match.player1_profile_photo_url
         ? `${req.protocol}://${req.get("host")}${
             match.player1_profile_photo_url
           }`
         : null,
-      player2_profile_photo_url: match.player2_profile_photo_url
+      player2_avatar_url: match.player2_profile_photo_url
         ? `${req.protocol}://${req.get("host")}${
             match.player2_profile_photo_url
           }`
@@ -356,7 +382,21 @@ router.put(
       if (result.rows.length === 0) {
         return res.status(404).json({ message: "Match not found" });
       }
-      res.json(result.rows[0]);
+      const match = result.rows[0];
+      const updatedMatch = {
+        ...match,
+        player1_avatar_url: match.player1_profile_photo_url
+          ? `${req.protocol}://${req.get("host")}${
+              match.player1_profile_photo_url
+            }`
+          : null,
+        player2_avatar_url: match.player2_profile_photo_url
+          ? `${req.protocol}://${req.get("host")}${
+              match.player2_profile_photo_url
+            }`
+          : null,
+      };
+      res.json(updatedMatch);
     } catch (error) {
       console.error("Error updating match:", error);
       res.status(500).json({ message: error.message });
@@ -409,6 +449,18 @@ router.post(
             `You have a bye in Round ${nextRound} and advance automatically.`,
           ]
         );
+        matches.push({
+          id: tournamentId,
+          player1_id: byePlayer.id,
+          player1_username: byePlayer.username,
+          player1_avatar_url: byePlayer.profile_photo_url,
+          player2_id: null,
+          player2_username: null,
+          player2_avatar_url: null,
+          winner_id: byePlayer.id,
+          winner_username: byePlayer.username,
+          round: nextRound,
+        });
       }
 
       for (let i = 0; i < winners.length; i += 2) {
@@ -424,7 +476,9 @@ router.post(
             player1_id: player1.id,
             player2_id: player2.id,
             player1_username: player1.username,
+            player1_avatar_url: player1.profile_photo_url,
             player2_username: player2.username,
+            player2_avatar_url: player2.profile_photo_url,
             round: nextRound,
           });
           await pool.query(
