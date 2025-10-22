@@ -83,12 +83,10 @@ function TournamentApplication({ userId, onApply }) {
               Tournament:{" "}
               <span className="font-semibold">{tournament.name}</span>
               <br />
-              Status:{" "}
+              Status:
               <span
-                className={`inline-block px-2 py-1 rounded text-sm ${
-                  tournament.is_open
-                    ? "bg-green-500 text-white"
-                    : "bg-red-500 text-white"
+                className={`inline-block px-2 py-1   ${
+                  tournament.is_open ? " text-green-500" : "text-red-500"
                 }`}
               >
                 {tournament.is_open ? "Open" : "Closed"}

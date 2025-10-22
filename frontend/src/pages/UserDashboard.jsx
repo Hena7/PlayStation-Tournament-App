@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import axios from "../lib/api";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { Bell, Trophy, AlertCircle } from "lucide-react";
-import TournamentApplication from "./TournamentApplication";
+import TournamentApplication from "../components/TournamentApplication";
 
 function UserDashboard() {
   const [user, setUser] = useState(null);
@@ -41,7 +46,7 @@ function UserDashboard() {
         ];
 
         // Only fetch matches if a tournament exists
-        if (tournament) {
+        if (tournament && tournament.is_open) {
           promises.push(
             axios.get(`/api/tournament/${tournament.id}/matches`, {
               headers: { Authorization: `Bearer ${token}` },
@@ -62,7 +67,7 @@ function UserDashboard() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000);
+    const interval = setInterval(fetchData, 90000);
     return () => clearInterval(interval);
   }, []);
 

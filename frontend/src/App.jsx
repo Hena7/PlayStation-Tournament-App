@@ -1,15 +1,18 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AuthForm from "./components/AuthForm";
-import UserDashboard from "./components/UserDashboard";
-import AdminPanel from "./components/AdminPanel";
+import AuthForm from "./pages/AuthForm";
+import UserDashboard from "./pages/UserDashboard";
+import AdminPanel from "./pages/AdminPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UserProfile from "./components/UserProfile";
+import Home from "./pages/Home";
+import UserList from "./pages/UserList";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AuthForm />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/signin" element={<AuthForm />} />
         <Route
           path="/dashboard"
           element={
@@ -31,6 +34,14 @@ function App() {
           element={
             <ProtectedRoute adminOnly={true}>
               <AdminPanel />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <UserList />
             </ProtectedRoute>
           }
         />

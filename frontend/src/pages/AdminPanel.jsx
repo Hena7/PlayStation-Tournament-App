@@ -1,20 +1,25 @@
 import { useState, useEffect } from "react";
 import axios from "../lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { useNavigate } from "react-router-dom";
-import TournamentCreation from "./TournamentCreation";
-import UserList from "./UserList";
-import ParticipantList from "./ParticipantList";
-import TournamentControls from "./TournamentControls";
-import BracketDisplay from "./BracketDisplay";
-import RankingManagement from "./RankingManagement";
+import TournamentCreation from "../components/TournamentCreation";
+
+import ParticipantList from "../components/ParticipantList";
+import TournamentControls from "../components/TournamentControls";
+import BracketDisplay from "../components/BracketDisplay";
+import RankingManagement from "../components/RankingManagement";
 
 function AdminPanel() {
   const [user, setUser] = useState(null);
-  const [allUsers, setAllUsers] = useState([]);
+
   const [tournament, setTournament] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [matches, setMatches] = useState([]);
@@ -245,6 +250,13 @@ function AdminPanel() {
           </CardContent>
         </Card>
 
+        <div
+          onClick={() => navigate("/admin/users")}
+          className="text-green-400 pl-6 mb-7 hover:cursor-pointer hover:underline"
+        >
+          Show All Users
+        </div>
+
         {/* Tournament Creation */}
         <TournamentCreation
           onCreate={handleCreateTournament}
@@ -257,9 +269,6 @@ function AdminPanel() {
           onClose={handleCloseTournament}
           onReset={handleResetTournament}
         />
-
-        {/* All Users */}
-        <UserList users={allUsers} />
 
         {/* Tournament Participants */}
         {tournament && (

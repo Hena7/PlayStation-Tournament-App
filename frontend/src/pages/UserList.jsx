@@ -1,7 +1,30 @@
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 
-function UserList({ users }) {
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const usersResponse = await axios.get("/api/tournament/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUsers(usersResponse.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
+  }, []);
   return (
     <Card className="bg-gray-800 border-none mb-8">
       <CardHeader>
