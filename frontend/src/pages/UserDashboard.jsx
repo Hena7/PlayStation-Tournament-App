@@ -35,6 +35,7 @@ function UserDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const tournament = tournamentRes.data.tournament;
+        const matches = tournamentRes.data.matches;
 
         const promises = [
           axios.get("/api/ranking", {
@@ -45,21 +46,12 @@ function UserDashboard() {
           }),
         ];
 
-        // Only fetch matches if a tournament exists
-        if (tournament && tournament.is_open) {
-          promises.push(
-            axios.get(`/api/tournament/${tournament.id}/matches`, {
-              headers: { Authorization: `Bearer ${token}` },
-            })
-          );
-        }
-
-        const [rankingsRes, notificationsRes, matchesRes] = await Promise.all(
+        const [rankingsRes, notificationsRes] = await Promise.all(
           promises
         );
         setRankings(rankingsRes.data);
         setNotifications(notificationsRes.data);
-        setMatches(tournament ? matchesRes.data : []);
+        setMatches(tournament ? matches : []);
       } catch (error) {
         console.error("Dashboard error:", error);
         setError("Failed to load dashboard data. Please try again later.");

@@ -312,7 +312,7 @@ router.get("/:tournamentId/matches", authMiddleware, async (req, res) => {
     }
 
     const result = await pool.query(
-      "SELECT m.*, u1.username as player1_username, u2.username as player2_username, u3.username as winner_username " +
+      "SELECT m.*, u1.username as player1_username, u1.profile_photo_url as player1_profile_photo_url, u2.username as player2_username, u2.profile_photo_url as player2_profile_photo_url, u3.username as winner_username " +
         "FROM matches m " +
         "LEFT JOIN users u1 ON m.player1_id = u1.id " +
         "LEFT JOIN users u2 ON m.player2_id = u2.id " +
@@ -320,7 +320,20 @@ router.get("/:tournamentId/matches", authMiddleware, async (req, res) => {
         "WHERE m.tournament_id = $1",
       [req.params.tournamentId]
     );
-    res.json(result.rows);
+    const matches = result.rows.map((match) => ({
+      ...match,
+      player1_profile_photo_url: match.player1_profile_photo_url
+        ? `${req.protocol}://${req.get("host")}${
+            match.player1_profile_photo_url
+          }`
+        : null,
+      player2_profile_photo_url: match.player2_profile_photo_url
+        ? `${req.protocol}://${req.get("host")}${
+            match.player2_profile_photo_url
+          }`
+        : null,
+    }));
+    res.json(matches);
   } catch (error) {
     console.error("Error fetching matches:", error);
     res.status(500).json({ message: error.message });

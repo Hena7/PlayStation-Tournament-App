@@ -1,7 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { Trophy } from "lucide-react";
+import { BookOpen, Trophy, UserPlus } from "lucide-react";
 import Footer from "../components/Footer";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 
 function Home() {
   const navigate = useNavigate();
@@ -31,9 +37,8 @@ function Home() {
           </div>
         </div>
       </nav>
-
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center relative">
+      <div className="flex-1 flex items-center justify-center relative mb-20">
         {/* Football Image with Animation */}
         <div className="absolute inset-0 flex items-center justify-center">
           <img
@@ -46,12 +51,117 @@ function Home() {
         {/* Start Playing Button */}
         <Button
           onClick={() => navigate("/signin")}
-          className="relative bg-primary hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-lg shadow-lg hover:shadow-xl transition-shadow z-10"
+          className="relative bg-primary hover:bg-blue-700 text-white font-bold py-8 px-16 rounded-full text-lg shadow-lg hover:shadow-inherit transition-shadow z-10  my-32 hover:scale-105 "
         >
           Start Playing
         </Button>
       </div>
+      {/* Info Cards */}
+      <div className="max-w-6xl mx-auto px-4 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* How to Register Card */}
+          <Card className="bg-gray-800 border-none text-gray-200 hover:scale-105  transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <UserPlus className="h-6 w-6 mr-2 text-white" />
+                How to Register
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="list-decimal list-inside space-y-2">
+                <li>
+                  Click "Sign In" to log in or "Register" to create an account.
+                </li>
+                <li>
+                  Complete the registration form with your username, email, and
+                  password.
+                </li>
+                <li>Go to your dashboard and apply for an open tournament.</li>
+                <li>
+                  Wait for the admin to start the tournament and check your
+                  matches!
+                </li>
+              </ol>
+            </CardContent>
+          </Card>
 
+          {/* Game Rules Card */}
+          <Card className="bg-gray-800 border-none text-gray-200 hover:scale-105 transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BookOpen className="h-6 w-6 mr-2 text-white" />
+                Game Rules
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc list-inside space-y-2">
+                <li>
+                  Single-elimination tournament: win to advance, lose to be
+                  eliminated.
+                </li>
+                <li>Matches are assigned randomly by the admin.</li>
+                <li>Admins update winners after each match.</li>
+                <li>
+                  Check your dashboard for real-time rankings and match updates.
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>{" "}
+      {/* Info Cards */}
+      <div className="max-w-6xl mx-auto px-4 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* How to Register Card */}
+          <Card className="bg-gray-800 border-none text-gray-200 hover:scale-105 transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <UserPlus className="h-6 w-6 mr-2 text-white" />
+                How to Register
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="list-decimal list-inside space-y-2">
+                <li>
+                  Click "Sign In" to log in or "Register" to create an account.
+                </li>
+                <li>
+                  Complete the registration form with your username, email, and
+                  password.
+                </li>
+                <li>Go to your dashboard and apply for an open tournament.</li>
+                <li>
+                  Wait for the admin to start the tournament and check your
+                  matches!
+                </li>
+              </ol>
+            </CardContent>
+          </Card>
+
+          {/* Game Rules Card */}
+          <Card className="bg-gray-800 border-none text-gray-200 hover:scale-105 transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BookOpen className="h-6 w-6 mr-2 text-white" />
+                Game Rules
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc list-inside space-y-2">
+                <li>
+                  Single-elimination tournament: win to advance, lose to be
+                  eliminated.
+                </li>
+                <li>Matches are assigned randomly by the admin.</li>
+                <li>Admins update winners after each match.</li>
+                <li>
+                  Check your dashboard for real-time rankings and match updates.
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
       {/* Footer */}
       <Footer />
     </div>

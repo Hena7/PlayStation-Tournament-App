@@ -11,7 +11,6 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useNavigate } from "react-router-dom";
 import TournamentCreation from "../components/TournamentCreation";
-
 import ParticipantList from "../components/ParticipantList";
 import TournamentControls from "../components/TournamentControls";
 import BracketDisplay from "../components/BracketDisplay";
@@ -19,7 +18,7 @@ import RankingManagement from "../components/RankingManagement";
 
 function AdminPanel() {
   const [user, setUser] = useState(null);
-
+  const [allUsers, setAllUsers] = useState([]);
   const [tournament, setTournament] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [matches, setMatches] = useState([]);
@@ -249,6 +248,7 @@ function AdminPanel() {
             </div>
           </CardContent>
         </Card>
+        {/* All Users */}
 
         <div
           onClick={() => navigate("/admin/users")}
