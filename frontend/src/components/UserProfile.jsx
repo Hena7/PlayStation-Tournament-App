@@ -130,7 +130,7 @@ function UserProfile() {
                 type="file"
                 onChange={handleFileChange}
                 accept="image/*"
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-700"
+                className="file:mr-4 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-700 active:scale-95 hover:scale-105 "
               />
               {preview && profilePicFile && (
                 <p className="text-sm text-green-400">✅ New photo selected</p>

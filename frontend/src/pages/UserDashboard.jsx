@@ -180,9 +180,9 @@ function UserDashboard() {
                   >
                     <p className="font-semibold">
                       {r.tournament_name}
-                      <span className="text-gray-500 text-xs">
+                      {/* <span className="text-gray-500 text-xs">
                         ({new Date(r.created_at).toLocaleString()})
-                      </span>
+                      </span> */}
                       : Rank {r.rank}
                     </p>
                   </div>

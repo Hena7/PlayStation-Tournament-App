@@ -193,14 +193,14 @@ function AdminPanel() {
                       type="file"
                       onChange={handleFileChange}
                       accept="image/*"
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-700"
+                      className="file:mr-4 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-700"
                     />
                     {preview && profilePicFile && (
                       <p className="text-sm text-green-400">
                         ✅ New photo selected
                       </p>
                     )}
-                    <div className="flex justify-end space-x-2">
+                    <div>
                       <Button
                         type="button"
                         variant="outline"
@@ -230,20 +230,22 @@ function AdminPanel() {
                     </div>
                   </form>
                 ) : (
-                  <Button
-                    onClick={() => setIsEditingProfile(true)}
-                    className="bg-primary hover:bg-blue-700"
-                  >
-                    ✏️ Change Profile Picture
-                  </Button>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      onClick={() => setIsEditingProfile(true)}
+                      className="bg-primary hover:bg-blue-700"
+                    >
+                      ✏️ Change Profile Picture
+                    </Button>
+                    <Button
+                      onClick={handleLogout}
+                      variant="destructive"
+                      className="bg-red-600 hover:bg-red-900"
+                    >
+                      Logout
+                    </Button>{" "}
+                  </div>
                 )}
-                <Button
-                  onClick={handleLogout}
-                  variant="destructive"
-                  className="bg-red-600 hover:bg-red-900"
-                >
-                  Logout
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -252,7 +254,7 @@ function AdminPanel() {
 
         <div
           onClick={() => navigate("/admin/users")}
-          className="text-green-400 pl-6 mb-7 hover:cursor-pointer hover:underline"
+          className="text-green-300 pl-6 mb-7 hover:scale-95 hover:cursor-pointer underline "
         >
           Show All Users
         </div>

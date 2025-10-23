@@ -8,8 +8,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function UserList() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
@@ -28,7 +30,15 @@ function UserList() {
   return (
     <Card className="bg-gray-800 border-none mb-8">
       <CardHeader>
-        <CardTitle>All Users</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>All Users</CardTitle>
+          <p
+            onClick={() => navigate("/admin")}
+            className="text-green-300 underline hover:scale-105 hover:cursor-pointer"
+          >
+            Back To Admin Dashboard
+          </p>
+        </div>
       </CardHeader>
       <CardContent>
         {users.length === 0 ? (

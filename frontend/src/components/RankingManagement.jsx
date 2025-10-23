@@ -50,6 +50,8 @@ function RankingManagement({ tournament, matches, participants, onUpdate }) {
     }
   };
 
+  const winners = matches.filter((m) => m.winner_id).map((m) => m.winner_id);
+
   return (
     <Card className="bg-gray-800 border-none">
       <CardHeader>

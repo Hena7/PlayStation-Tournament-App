@@ -31,7 +31,7 @@ function Home() {
         {/* Start Playing Button */}
         <Button
           onClick={() => navigate("/signin")}
-          className="relative bg-primary hover:bg-blue-700 text-white font-bold py-8 px-16 rounded-full text-lg shadow-lg hover:shadow-inherit transition-shadow z-10  my-32 hover:scale-105 "
+          className="max-md:py-6 max-md:px-14 max-md:text-sm relative bg-primary hover:bg-blue-700 text-white font-bold py-8 px-16 rounded-full text-lg shadow-lg hover:shadow-inherit transition-shadow z-10  my-32 hover:scale-105 active:scale-95 "
         >
           Start Playing
         </Button>
