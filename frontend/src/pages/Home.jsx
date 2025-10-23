@@ -8,35 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import Header from "../components/Header";
 
 function Home() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 to-black flex flex-col">
-      {/* Navbar */}
-      <nav className="bg-gray-800 p-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Trophy className="h-6 w-6 text-white" />
-            <span className="text-white font-bold text-xl">PS5 Tournament</span>
-          </div>
-          <div className="flex space-x-4">
-            <a href="/" className="text-gray-300 hover:text-white">
-              Home
-            </a>
-            <a href="/about" className="text-gray-300 hover:text-white">
-              About
-            </a>
-            <a href="/contact" className="text-gray-300 hover:text-white">
-              Contact
-            </a>
-            <a href="/signin" className="text-gray-300 hover:text-white">
-              Sign In
-            </a>
-          </div>
-        </div>
-      </nav>
+      {/* Header */}
+      <Header />
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center relative mb-20">
         {/* Football Image with Animation */}
@@ -109,59 +89,6 @@ function Home() {
           </Card>
         </div>
       </div>{" "}
-      {/* Info Cards */}
-      <div className="max-w-6xl mx-auto px-4 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* How to Register Card */}
-          <Card className="bg-gray-800 border-none text-gray-200 hover:scale-105 transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <UserPlus className="h-6 w-6 mr-2 text-white" />
-                How to Register
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ol className="list-decimal list-inside space-y-2">
-                <li>
-                  Click "Sign In" to log in or "Register" to create an account.
-                </li>
-                <li>
-                  Complete the registration form with your username, email, and
-                  password.
-                </li>
-                <li>Go to your dashboard and apply for an open tournament.</li>
-                <li>
-                  Wait for the admin to start the tournament and check your
-                  matches!
-                </li>
-              </ol>
-            </CardContent>
-          </Card>
-
-          {/* Game Rules Card */}
-          <Card className="bg-gray-800 border-none text-gray-200 hover:scale-105 transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <BookOpen className="h-6 w-6 mr-2 text-white" />
-                Game Rules
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc list-inside space-y-2">
-                <li>
-                  Single-elimination tournament: win to advance, lose to be
-                  eliminated.
-                </li>
-                <li>Matches are assigned randomly by the admin.</li>
-                <li>Admins update winners after each match.</li>
-                <li>
-                  Check your dashboard for real-time rankings and match updates.
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
       {/* Footer */}
       <Footer />
     </div>

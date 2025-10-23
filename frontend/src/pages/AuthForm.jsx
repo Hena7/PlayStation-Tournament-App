@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input";
 import axios from "axios";
 import { Trophy } from "lucide-react";
 import Footer from "../components/Footer";
+import Header from "../components/Header";
 // import Footer from "../components/Footer";
 
 function AuthForm() {
@@ -37,25 +38,7 @@ function AuthForm() {
 
   return (
     <>
-      <nav className="bg-gray-800 p-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Trophy className="h-6 w-6 text-white" />
-            <span className="text-white font-bold text-xl">PS5 Tournament</span>
-          </div>
-          <div className="flex space-x-4">
-            <a href="/" className="text-gray-300 hover:text-white">
-              Home
-            </a>
-            <a href="/about" className="text-gray-300 hover:text-white">
-              About
-            </a>
-            <a href="/contact" className="text-gray-300 hover:text-white">
-              Contact
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Header />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-black">
         <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
           <h1 className="text-3xl font-bold mb-6 text-center">
@@ -93,7 +76,7 @@ function AuthForm() {
             />
             <Button
               type="submit"
-              className="w-full bg-primary hover:bg-blue-700"
+              className="w-full bg-primary"
               disabled={isLoading}
             >
               {isLoading ? (

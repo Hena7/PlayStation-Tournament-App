@@ -121,7 +121,8 @@ function RankingManagement({ tournament, matches, participants, onUpdate }) {
             {matches.every((m) => m.winner_id) && (
               <Button
                 onClick={handleNextRound}
-                className="mt-4 bg-primary hover:bg-blue-700"
+                className="mt-4 bg-primary"
+                disabled={winners.length <= 1}
               >
                 Start Next Round
               </Button>

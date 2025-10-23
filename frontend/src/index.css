@@ -12,7 +12,11 @@ body {
 }
 
 .bg-primary {
-  background-color: #1a73e8;
+  /* background-color: #1a73e8; */
+  background: linear-gradient(90deg, #5de0e6, #004aad);
+}
+.bg-primary:hover {
+  background: linear-gradient(90deg, #004aad, #5de0e6);
 }
 
 @keyframes spin-pulse {

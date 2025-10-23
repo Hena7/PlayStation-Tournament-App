@@ -179,7 +179,11 @@ function UserDashboard() {
                     className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg"
                   >
                     <p className="font-semibold">
-                      {r.tournament_name}: Rank {r.rank}
+                      {r.tournament_name}
+                      <span className="text-gray-500 text-xs">
+                        ({new Date(r.created_at).toLocaleString()})
+                      </span>
+                      : Rank {r.rank}
                     </p>
                   </div>
                 ))}
