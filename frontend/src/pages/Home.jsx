@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { BookOpen, Trophy, UserPlus } from "lucide-react";
+import { BookOpen, UserPlus } from "lucide-react";
 import Footer from "../components/Footer";
 import {
   Card,
@@ -22,7 +22,7 @@ function Home() {
         {/* Football Image with Animation */}
         <div className="absolute inset-0 flex items-center justify-center">
           <img
-            src="https://i.pinimg.com/736x/86/1e/c6/861ec64c5ff4beae124b4d5974dac741.jpg"
+            src="/hero.jpg"
             alt="Football"
             className="w-full h-full object-cover opacity-40 animate-float-slow"
             style={{ willChange: "transform, opacity" }}
