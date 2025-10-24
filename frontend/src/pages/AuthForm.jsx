@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import axios from "axios";
+import api from "../lib/api";
 import { Trophy } from "lucide-react";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
@@ -24,7 +24,7 @@ function AuthForm() {
     try {
       const url = isLogin ? `/api/auth/login` : `/api/auth/register`;
       console.log(url);
-      const response = await axios.post(url, formData);
+      const response = await api.post(url, formData);
       localStorage.setItem("token", response.data.token);
       // Save the user object to localStorage
       localStorage.setItem("user", JSON.stringify(response.data.user));
