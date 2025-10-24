@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import axios from "axios";
+import api from "../lib/api";
 
 function UserProfile() {
   const [user, setUser] = useState(null);
@@ -50,7 +50,7 @@ function UserProfile() {
       console.log("UserProfile: Submitting text data:", formData);
 
       // Update text data
-      const textUpdateResponse = await axios.put(
+      const textUpdateResponse = await api.put(
         `/api/user/${user.id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -63,7 +63,7 @@ function UserProfile() {
       if (profilePicFile) {
         const photoFormData = new FormData();
         photoFormData.append("profile_photo", profilePicFile);
-        const photoUpdateResponse = await axios.post(
+        const photoUpdateResponse = await api.post(
           `/api/user/${user.id}/photo`,
           photoFormData,
           {

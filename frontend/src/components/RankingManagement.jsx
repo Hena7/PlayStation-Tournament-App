@@ -1,7 +1,7 @@
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { CheckCircle } from "lucide-react";
-import axios from "../lib/api";
+import api from "../lib/api";
 import { useState } from "react";
 
 function RankingManagement({ tournament, matches, participants, onUpdate }) {
@@ -12,17 +12,17 @@ function RankingManagement({ tournament, matches, participants, onUpdate }) {
     try {
       const token = localStorage.getItem("token");
       const match = matches.find((m) => m.id === matchId);
-      await axios.post(
+      await api.post(
         "/api/ranking",
         { user_id: winnerId, tournament_id: tournament.id, rank: match.round },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      await axios.put(
+      await api.put(
         `/api/tournament/matches/${matchId}`,
         { winner_id: winnerId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const response = await axios.get(
+      const response = await api.get(
         `/api/tournament/${tournament.id}/matches`,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -39,7 +39,7 @@ function RankingManagement({ tournament, matches, participants, onUpdate }) {
   const handleNextRound = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post(
+      const response = await api.post(
         `/api/tournament/${tournament.id}/next-round`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "../lib/api";
+import api from "../lib/api";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { UserPlus, AlertCircle } from "lucide-react";
@@ -17,7 +17,7 @@ function TournamentApplication({ userId, onApply }) {
         setIsLoading(true);
         setError(null);
         const token = localStorage.getItem("token");
-        const response = await axios.get("/api/tournament/latest", {
+        const response = await api.get("/api/tournament/latest", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTournament(response.data.tournament);
@@ -39,7 +39,7 @@ function TournamentApplication({ userId, onApply }) {
     setError(null);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
+      await api.post(
         "/api/tournament/apply",
         {},
         { headers: { Authorization: `Bearer ${token}` } }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "../lib/api";
+import api from "../lib/api";
 import {
   Card,
   CardContent,
@@ -42,10 +42,10 @@ function AdminPanel() {
 
         const token = localStorage.getItem("token");
         const [usersResponse, tournamentResponse] = await Promise.all([
-          axios.get("/api/tournament/users", {
+          api.get("/api/tournament/users", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("/api/tournament/latest", {
+          api.get("/api/tournament/latest", {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -82,7 +82,7 @@ function AdminPanel() {
   const handleStartTournament = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post(
+      const response = await api.post(
         "/api/tournament/start",
         {},
         { headers: { Authorization: `Bearer ${token}` } }
@@ -120,7 +120,7 @@ function AdminPanel() {
       if (profilePicFile) {
         const photoFormData = new FormData();
         photoFormData.append("profile_photo", profilePicFile);
-        const photoUpdateResponse = await axios.post(
+        const photoUpdateResponse = await api.post(
           `/api/user/${user.id}/photo`,
           photoFormData,
           {

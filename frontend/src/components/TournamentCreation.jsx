@@ -2,7 +2,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { useState } from "react";
-import axios from "../lib/api";
+import api from "../lib/api";
 
 function TournamentCreation({ onCreate, disabled }) {
   const [name, setName] = useState(
@@ -13,7 +13,7 @@ function TournamentCreation({ onCreate, disabled }) {
   const handleCreate = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post(
+      const response = await api.post(
         "/api/tournament/create",
         { name, max_players: Number(maxPlayers) },
         { headers: { Authorization: `Bearer ${token}` } }

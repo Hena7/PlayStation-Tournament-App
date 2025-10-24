@@ -7,7 +7,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 function UserList() {
@@ -17,7 +17,7 @@ function UserList() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const usersResponse = await axios.get("/api/tournament/users", {
+        const usersResponse = await api.get("/api/tournament/users", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsers(usersResponse.data);

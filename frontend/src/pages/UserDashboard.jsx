@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "../lib/api";
+import api from "../lib/api";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -30,16 +30,16 @@ function UserDashboard() {
         }
         const token = localStorage.getItem("token");
         // Fetch latest tournament to get tournamentId
-        const tournamentRes = await axios.get("/api/tournament/latest", {
+        const tournamentRes = await api.get("/api/tournament/latest", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const tournament = tournamentRes.data.tournament;
         const matches = tournamentRes.data.matches;
         const promises = [
-          axios.get("/api/ranking", {
+          api.get("/api/ranking", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("/api/notifications", {
+          api.get("/api/notifications", {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ];
@@ -62,7 +62,7 @@ function UserDashboard() {
     const fetchNotifications = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("/api/notifications", {
+        const response = await api.get("/api/notifications", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setNotifications(response.data);

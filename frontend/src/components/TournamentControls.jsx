@@ -1,7 +1,7 @@
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Lock, Trash2 } from "lucide-react";
-import axios from "../lib/api";
+import api from "../lib/api";
 import { useState } from "react";
 
 function TournamentControls({ tournament, onClose, onReset }) {
@@ -19,7 +19,7 @@ function TournamentControls({ tournament, onClose, onReset }) {
     setIsClosing(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
+      await api.post(
         "/api/tournament/close",
         {},
         { headers: { Authorization: `Bearer ${token}` } }
@@ -43,7 +43,7 @@ function TournamentControls({ tournament, onClose, onReset }) {
     setIsResetting(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.delete("/api/tournament/reset", {
+      await api.delete("/api/tournament/reset", {
         headers: { Authorization: `Bearer ${token}` },
       });
       onReset();
