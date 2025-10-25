@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": "https://play-station-tournament-app.vercel.app",
+      "/api": "http://localhost:5000",
     },
   },
 });

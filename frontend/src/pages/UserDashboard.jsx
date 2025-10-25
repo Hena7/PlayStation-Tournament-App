@@ -24,11 +24,13 @@ function UserDashboard() {
     const fetchData = async () => {
       try {
         setError(null);
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        if (storedUser) {
-          setUser(storedUser);
-        }
         const token = localStorage.getItem("token");
+        // Fetch user data from backend
+        const userRes = await api.get("/api/user/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(userRes.data);
+        localStorage.setItem("user", JSON.stringify(userRes.data));
         // Fetch latest tournament to get tournamentId
         const tournamentRes = await api.get("/api/tournament/latest", {
           headers: { Authorization: `Bearer ${token}` },
@@ -102,7 +104,7 @@ function UserDashboard() {
             {/* User Info */}
             <div className="flex items-center space-x-4">
               <Avatar className="h-16 w-16 border-2 border-primary">
-                <AvatarImage src={user.avatar_url} alt={user.username} />
+                <AvatarImage src={user.profile_photo_url} alt={user.username} />
                 <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
                   {user.username.charAt(0).toUpperCase()}
                 </AvatarFallback>
