@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
-import db from "../config/db.js";
+import prisma from "../config/db.js";
 import { authMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -25,18 +25,28 @@ const upload = multer({ storage });
 // GET USER DATA
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    const result = await db.query(
-      `SELECT id, username, email, is_admin, profile_photo_url
-       FROM users
-       WHERE id = $1`,
-      [req.user.id]
-    );
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        is_admin: true,
+        profile_photo_url: true,
+        full_name: true,
+        ethiopian_phone: true,
+        favorite_game: true,
+        controller_id: true,
+        gamesPlayed: true,
+        wins: true,
+        losses: true,
+      },
+    });
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const user = result.rows[0];
     if (user.profile_photo_url) {
       user.profile_photo_url = `${req.protocol}://${req.get("host")}${
         user.profile_photo_url
@@ -58,22 +68,42 @@ router.put("/:id", authMiddleware, async (req, res) => {
       .json({ message: "Forbidden: You can only update your own profile." });
   }
 
-  const { username, email } = req.body;
+  const {
+    username,
+    email,
+    full_name,
+    ethiopian_phone,
+    favorite_game,
+    controller_id,
+  } = req.body;
 
   try {
-    const result = await db.query(
-      `UPDATE users 
-       SET username = $1, email = $2 
-       WHERE id = $3 
-       RETURNING id, username, email, is_admin, profile_photo_url`,
-      [username, email, req.params.id]
-    );
+    const user = await prisma.user.update({
+      where: { id: parseInt(req.params.id) },
+      data: {
+        username,
+        email,
+        full_name,
+        ethiopian_phone,
+        favorite_game,
+        controller_id,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        is_admin: true,
+        profile_photo_url: true,
+        full_name: true,
+        ethiopian_phone: true,
+        favorite_game: true,
+        controller_id: true,
+        gamesPlayed: true,
+        wins: true,
+        losses: true,
+      },
+    });
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const user = result.rows[0];
     if (user.profile_photo_url) {
       user.profile_photo_url = `${req.protocol}://${req.get("host")}${
         user.profile_photo_url
@@ -106,19 +136,25 @@ router.post(
     const photoUrl = `/uploads/${req.file.filename}`;
 
     try {
-      const result = await db.query(
-        `UPDATE users 
-       SET profile_photo_url = $1 
-       WHERE id = $2 
-       RETURNING id, username, email, is_admin, profile_photo_url`,
-        [photoUrl, req.params.id]
-      );
+      const user = await prisma.user.update({
+        where: { id: parseInt(req.params.id) },
+        data: { profile_photo_url: photoUrl },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          is_admin: true,
+          profile_photo_url: true,
+          full_name: true,
+          ethiopian_phone: true,
+          favorite_game: true,
+          controller_id: true,
+          gamesPlayed: true,
+          wins: true,
+          losses: true,
+        },
+      });
 
-      if (result.rows.length === 0) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      const user = result.rows[0];
       user.profile_photo_url = `${req.protocol}://${req.get("host")}${
         user.profile_photo_url
       }`;

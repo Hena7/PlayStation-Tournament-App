@@ -1,5 +1,5 @@
 import express from "express";
-import pool from "../config/db.js";
+import prisma from "../config/db.js";
 import { authMiddleware, adminMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -7,16 +7,30 @@ const router = express.Router();
 // Get all users
 router.get("/users", authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT id, username, email, profile_photo_url FROM users WHERE is_admin = false ORDER BY username"
-    );
-    const users = result.rows.map((user) => ({
+    const users = await prisma.user.findMany({
+      where: { is_admin: false },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        profile_photo_url: true,
+        full_name: true,
+        ethiopian_phone: true,
+        favorite_game: true,
+        controller_id: true,
+        gamesPlayed: true,
+        wins: true,
+        losses: true,
+      },
+      orderBy: { username: "asc" },
+    });
+    const formattedUsers = users.map((user) => ({
       ...user,
       profile_photo_url: user.profile_photo_url
         ? `${req.protocol}://${req.get("host")}${user.profile_photo_url}`
         : null,
     }));
-    res.json(users);
+    res.json(formattedUsers);
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: "Server error" });

@@ -1,5 +1,5 @@
 import express from "express";
-import pool from "../config/db.js";
+import prisma from "../config/db.js";
 import { authMiddleware, adminMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -7,11 +7,14 @@ const router = express.Router();
 router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
   const { user_id, tournament_id, rank } = req.body;
   try {
-    const result = await pool.query(
-      "INSERT INTO rankings (user_id, tournament_id, rank) VALUES ($1, $2, $3) RETURNING *",
-      [user_id, tournament_id, rank]
-    );
-    res.json(result.rows[0]);
+    const ranking = await prisma.ranking.create({
+      data: {
+        user_id: user_id,
+        tournament_id: tournament_id,
+        rank: rank,
+      },
+    });
+    res.json(ranking);
   } catch (error) {
     console.error("Error posting ranking:", error);
     res.status(500).json({ message: error.message });
@@ -20,16 +23,24 @@ router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
 
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT r.*, u.username, t.name as tournament_name " +
-        "FROM rankings r " +
-        "JOIN users u ON r.user_id = u.id " +
-        "JOIN tournaments t ON r.tournament_id = t.id " +
-        "WHERE r.user_id = $1 " +
-        "ORDER BY r.rank",
-      [req.user.id]
-    );
-    res.json(result.rows);
+    const rankings = await prisma.ranking.findMany({
+      where: { user_id: req.user.id },
+      include: {
+        user: {
+          select: { username: true },
+        },
+        tournament: {
+          select: { name: true },
+        },
+      },
+      orderBy: { rank: "asc" },
+    });
+    const formattedRankings = rankings.map((ranking) => ({
+      ...ranking,
+      username: ranking.user.username,
+      tournament_name: ranking.tournament.name,
+    }));
+    res.json(formattedRankings);
   } catch (error) {
     console.error("Error fetching rankings:", error);
     res.status(500).json({ message: error.message });

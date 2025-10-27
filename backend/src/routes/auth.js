@@ -1,19 +1,51 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import pool from "../config/db.js";
+import prisma from "../config/db.js";
 
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
+  const {
+    username,
+    email,
+    password,
+    full_name,
+    ethiopian_phone,
+    favorite_game,
+    controller_id,
+  } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      "INSERT INTO users (username, email, password, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, username, email, is_admin, profile_photo_url",
-      [username, email, hashedPassword, false]
-    );
-    const user = result.rows[0];
+    const user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+        is_admin: false,
+        full_name,
+        ethiopian_phone,
+        favorite_game,
+        controller_id,
+        gamesPlayed: 0,
+        wins: 0,
+        losses: 0,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        is_admin: true,
+        profile_photo_url: true,
+        full_name: true,
+        ethiopian_phone: true,
+        favorite_game: true,
+        controller_id: true,
+        gamesPlayed: true,
+        wins: true,
+        losses: true,
+      },
+    });
     const token = jwt.sign(
       { id: user.id, is_admin: user.is_admin },
       process.env.JWT_SECRET
@@ -33,11 +65,24 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-    const result = await pool.query(
-      "SELECT id, username, email, is_admin, profile_photo_url, password FROM users WHERE email = $1",
-      [email]
-    );
-    const user = result.rows[0];
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        is_admin: true,
+        profile_photo_url: true,
+        password: true,
+        full_name: true,
+        ethiopian_phone: true,
+        favorite_game: true,
+        controller_id: true,
+        gamesPlayed: true,
+        wins: true,
+        losses: true,
+      },
+    });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
