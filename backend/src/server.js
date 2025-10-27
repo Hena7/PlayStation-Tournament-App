@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.js";
 import tournamentRoutes from "./routes/tournament.js";
 import rankingRoutes from "./routes/ranking.js";
 import userRoutes from "./routes/user.js";
 import notificationsRoutes from "./routes/notifications.js";
+import { fileURLToPath } from "url";
+import path from "path";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);

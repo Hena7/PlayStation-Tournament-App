@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import Header from "../components/Header";
-
+import "./App.css";
 function Home() {
   const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ function Home() {
         {/* Start Playing Button */}
         <Button
           onClick={() => navigate("/signin")}
-          className="max-md:py-6 max-md:px-14 max-md:text-sm relative bg-primary hover:bg-blue-700 text-white font-bold py-8 px-16 rounded-full text-lg shadow-lg hover:shadow-inherit transition-shadow z-10  my-32 hover:scale-105 active:scale-95 "
+          className="max-md:py-6 max-md:px-14 max-md:text-sm relative bg-primary hover:bg-blue-700 text-white font-bold py-8 px-16 rounded-full text-lg shadow-lg hover:shadow-inherit z-10  my-32 active:scale-95 transition-shadow hover:shadow-lg animate-fade-in opacity-80"
         >
           Start Playing
         </Button>
@@ -40,7 +40,7 @@ function Home() {
       <div className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* How to Register Card */}
-          <Card className="bg-gray-800 border-none text-gray-200 hover:scale-105  transition-shadow">
+          <Card className="bg-gray-800 border-none text-gray-200 hover:translate-y-[-15px] transition-shadow hover:shadow-lg animate-fade-in opacity-80">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <UserPlus className="h-6 w-6 mr-2 text-white" />
@@ -66,7 +66,7 @@ function Home() {
           </Card>
 
           {/* Game Rules Card */}
-          <Card className="bg-gray-800 border-none text-gray-200 hover:scale-105 transition-shadow">
+          <Card className="bg-gray-800 border-none text-gray-200 hover:translate-y-[-15px] transition-shadow hover:shadow-lg animate-fade-in opacity-80">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <BookOpen className="h-6 w-6 mr-2 text-white" />
