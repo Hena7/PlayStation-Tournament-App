@@ -52,41 +52,59 @@ router.get("/", authMiddleware, async (req, res) => {
 // GET public leaderboard (no auth required)
 router.get("/leaderboard", async (req, res) => {
   try {
-    // Get all users with their stats
-    const users = await prisma.user.findMany({
-      where: { is_admin: false },
-      select: {
-        id: true,
-        username: true,
-        full_name: true,
-        profile_photo_url: true,
-        gamesPlayed: true,
-        wins: true,
-        losses: true,
-        favorite_game: true,
-        controller_id: true,
+    // Find the latest tournament with at least one ranking
+    const latestTournamentWithRankings = await prisma.tournament.findFirst({
+      where: {
+        rankings: {
+          some: {},
+        },
       },
+      orderBy: { id: "desc" },
+      select: { id: true },
     });
 
-    // Calculate points and rank users
-    const leaderboard = users
-      .map((user) => ({
+    if (!latestTournamentWithRankings) {
+      return res.json([]);
+    }
+
+    // Get rankings for the latest tournament with user details
+    const rankings = await prisma.ranking.findMany({
+      where: { tournament_id: latestTournamentWithRankings.id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            profile_photo_url: true,
+            gamesPlayed: true,
+            wins: true,
+            losses: true,
+          },
+        },
+      },
+      orderBy: { rank: "asc" },
+    });
+
+    // Map to leaderboard format
+    const leaderboard = rankings.map((ranking) => {
+      const user = ranking.user;
+      const rankScore = user.wins * 3 + user.gamesPlayed * 0.5;
+      const winRate =
+        user.gamesPlayed > 0
+          ? ((user.wins / user.gamesPlayed) * 100).toFixed(1) + "%"
+          : "0%";
+      return {
         id: user.id,
         username: user.username,
-        full_name: user.full_name,
         profile_photo_url: user.profile_photo_url,
         gamesPlayed: user.gamesPlayed,
         wins: user.wins,
         losses: user.losses,
-        points: user.wins * 3 + user.gamesPlayed * 0.5,
-        favorite_game: user.favorite_game,
-        controller_id: user.controller_id,
-      }))
-      .sort((a, b) => b.points - a.points)
-      .map((user, index) => ({
-        ...user,
-        rank: index + 1,
-      }));
+        winRate,
+        rankScore: rankScore.toFixed(1),
+        rank: ranking.rank,
+      };
+    });
 
     res.json(leaderboard);
   } catch (error) {

@@ -15,7 +15,7 @@ const Leaderboard = () => {
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/ranking/leaderboard");
+      const response = await api.get("/api/ranking/leaderboard");
       setLeaderboard(response.data);
     } catch (err) {
       setError("Failed to load leaderboard");
@@ -112,13 +112,19 @@ const Leaderboard = () => {
                       Player
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Games Played
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Wins
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Games
+                      Losses
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Points
+                      Win Rate
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Rank Score
                     </th>
                   </tr>
                 </thead>
@@ -154,22 +160,25 @@ const Leaderboard = () => {
                           )}
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {player.full_name || player.username}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              @{player.username}
+                              {player.username}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {player.gamesPlayed}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {player.wins}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {player.gamesPlayed}
+                        {player.losses}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {player.winRate}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        {player.points.toFixed(1)}
+                        {player.rankScore}
                       </td>
                     </tr>
                   ))}
