@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import UserList from "./pages/UserList";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Leaderboard from "./pages/Leaderboard";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/signin" element={<AuthForm />} />
         <Route
           path="/dashboard"

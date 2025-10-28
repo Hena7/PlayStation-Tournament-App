@@ -14,6 +14,7 @@ router.post("/register", async (req, res) => {
     ethiopian_phone,
     favorite_game,
     controller_id,
+    is_admin,
   } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -22,7 +23,7 @@ router.post("/register", async (req, res) => {
         username,
         email,
         password: hashedPassword,
-        is_admin: false,
+        is_admin: is_admin || false,
         full_name,
         ethiopian_phone,
         favorite_game,
