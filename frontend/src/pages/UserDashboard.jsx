@@ -217,10 +217,14 @@ function UserDashboard() {
                             alt={m.player1_username}
                           />
                           <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                            {m.player1_username.charAt(0).toUpperCase()}
+                            {m.player1_username
+                              ? m.player1_username.charAt(0).toUpperCase()
+                              : "?"}
                           </AvatarFallback>
                         </Avatar>
-                        <p className="font-semibold">{m.player1_username}</p>
+                        <p className="font-semibold">
+                          {m.player1_username || "Unknown"}
+                        </p>
                         <span>vs</span>
                         {/* Player 2 Avatar or Bye */}
                         {m.player2_id ? (
@@ -230,14 +234,18 @@ function UserDashboard() {
                               alt={m.player2_username}
                             />
                             <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                              {m.player2_username.charAt(0).toUpperCase()}
+                              {m.player2_username
+                                ? m.player2_username.charAt(0).toUpperCase()
+                                : "?"}
                             </AvatarFallback>
                           </Avatar>
                         ) : (
                           <span>Bye</span>
                         )}
                         {m.player2_id && (
-                          <p className="font-semibold">{m.player2_username}</p>
+                          <p className="font-semibold">
+                            {m.player2_username || "Unknown"}
+                          </p>
                         )}
                         {m.winner_username && (
                           <span className="text-green-400 ml-2">

@@ -34,7 +34,7 @@ function BracketDisplay({ matches }) {
                     >
                       <div className="flex items-center space-x-4">
                         <p>
-                          {match.player1_username} vs{" "}
+                          {match.player1_username || "Unknown"} vs{" "}
                           {match.player2_username || "Bye"}
                           {match.winner_username && (
                             <span className="text-green-400 ml-2">

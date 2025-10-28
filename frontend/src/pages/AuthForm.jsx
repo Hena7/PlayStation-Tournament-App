@@ -16,8 +16,6 @@ function AuthForm() {
     password: "",
     full_name: "",
     ethiopian_phone: "",
-    favorite_game: "",
-    controller_id: "",
   });
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -53,15 +51,6 @@ function AuthForm() {
               <>
                 <Input
                   type="text"
-                  placeholder="Username"
-                  value={formData.username}
-                  onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
-                  }
-                  className="w-full"
-                />
-                <Input
-                  type="text"
                   placeholder="Full Name"
                   value={formData.full_name}
                   onChange={(e) =>
@@ -70,32 +59,24 @@ function AuthForm() {
                   className="w-full"
                 />
                 <Input
+                  type="text"
+                  placeholder="Username"
+                  value={formData.username}
+                  onChange={(e) =>
+                    setFormData({ ...formData, username: e.target.value })
+                  }
+                  className="w-full"
+                />
+
+                <Input
                   type="tel"
-                  placeholder="Ethiopian Phone (+251...)"
+                  placeholder="Phone Number (+251...)"
                   value={formData.ethiopian_phone}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       ethiopian_phone: e.target.value,
                     })
-                  }
-                  className="w-full"
-                />
-                <Input
-                  type="text"
-                  placeholder="Favorite Game"
-                  value={formData.favorite_game}
-                  onChange={(e) =>
-                    setFormData({ ...formData, favorite_game: e.target.value })
-                  }
-                  className="w-full"
-                />
-                <Input
-                  type="text"
-                  placeholder="Controller ID"
-                  value={formData.controller_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, controller_id: e.target.value })
                   }
                   className="w-full"
                 />

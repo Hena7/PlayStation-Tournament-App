@@ -178,7 +178,9 @@ function AdminPanel() {
                 <Avatar className="h-16 w-16 border-2 border-primary">
                   <AvatarImage src={preview} alt={user.username} />
                   <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                    {user.username.charAt(0).toUpperCase()}
+                    {user.username
+                      ? user.username.charAt(0).toUpperCase()
+                      : "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
