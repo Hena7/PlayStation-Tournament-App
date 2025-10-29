@@ -90,7 +90,24 @@ router.put(
             losses: { increment: 1 },
           },
         });
+        // Update user stats for loser
+        await prisma.user.update({
+          where: { id: loser_id },
+          data: {
+            gamesPlayed: { increment: 1 },
+            losses: { increment: 1 },
+          },
+        });
       }
+
+      // Update user stats for winner
+      await prisma.user.update({
+        where: { id: winner_id },
+        data: {
+          gamesPlayed: { increment: 1 },
+          wins: { increment: 1 },
+        },
+      });
 
       const updatedMatch = await prisma.match.update({
         where: { id: parseInt(matchId) },

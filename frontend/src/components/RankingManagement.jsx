@@ -22,6 +22,12 @@ function RankingManagement({ tournament, matches, participants, onUpdate }) {
         { winner_id: winnerId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      // Update user stats
+      await api.post(
+        "/api/ranking/update-stats",
+        { user_id: winnerId, result: "win" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       const response = await api.get(
         `/api/tournament/${tournament.id}/matches`,
         {

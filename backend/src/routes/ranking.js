@@ -101,9 +101,16 @@ router.get("/leaderboard", async (req, res) => {
         wins: user.wins,
         losses: user.losses,
         winRate,
-        rankScore: rankScore.toFixed(1),
-        rank: ranking.rank,
+        rankScore: rankScore,
+        rank: ranking.rank, // temporary
       };
+    });
+
+    // Sort by rankScore descending and assign correct ranks
+    leaderboard.sort((a, b) => b.rankScore - a.rankScore);
+    leaderboard.forEach((player, index) => {
+      player.rank = index + 1;
+      player.rankScore = player.rankScore.toFixed(1);
     });
 
     res.json(leaderboard);
