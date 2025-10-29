@@ -61,6 +61,7 @@ model Participant {
   user_id       Int
   tournament_id Int
   applied_at    DateTime @default(now())
+  losses        Int      @default(0)
 
   // Relations
   user       User       @relation(fields: [user_id], references: [id], onDelete: Cascade)

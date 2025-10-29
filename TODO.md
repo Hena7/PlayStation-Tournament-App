@@ -1,25 +1,7 @@
-# Tournament Implementation TODO
-
-## Backend Changes
-
-- [ ] Update Prisma schema: Add Rounds model, update Match with round_id and score
-- [ ] Run Prisma migration
-- [ ] Modify tournament start logic: Create 3 rounds with random pairings for all participants
-- [ ] Update next-round logic: Mark current round completed, start next round if not last
-- [ ] Update match update: Allow setting winner and score
-- [ ] Add endpoints for rounds if needed
-
-## Frontend Changes
-
-- [ ] Update Home.jsx: Change rules to reflect 3 chances, no elimination
-- [ ] Create Rounds.jsx page: Show collapsible rounds with matches
-- [ ] Update Header.jsx: Add Rounds link
-- [ ] Update BracketDisplay.jsx: Display rounds as collapsible cards
-- [ ] Update AdminPanel.jsx: Show rounds and controls
-- [ ] Update UserDashboard.jsx: Show current round matches
-
-## Testing
-
-- [ ] Test backend endpoints
-- [ ] Test frontend navigation and display
-- [ ] Verify tournament flow: start, rounds, completion
+- [x] Update schema.prisma to add losses field to Participant model
+- [x] Run prisma migrate to apply schema changes
+- [x] Modify /start endpoint in tournamentLifecycle.js to create only round 1 with all participants paired randomly, handle bye
+- [x] Modify /next-round endpoint in tournamentMatches.js to create Round, get active participants based on losses (<3 for rounds 1-3, <2 for round 4+), pair randomly, handle bye
+- [x] Update PUT /matches/:matchId to increment loser's losses in Participant when winner is set
+- [x] Update /latest endpoint to include losses in participants response
+- [ ] Test the tournament start and next round logic

@@ -34,9 +34,11 @@ router.get("/latest", authMiddleware, async (req, res) => {
       });
     }
 
-    const participants = tournament.participants.map((p) =>
-      formatProfilePhoto(p.user, req)
-    );
+    const participants = tournament.participants.map((p) => ({
+      ...formatProfilePhoto(p.user, req),
+      applied_at: p.applied_at,
+      losses: p.losses,
+    }));
     const matches = tournament.matches.map((match) => formatMatch(match, req));
 
     const byePlayerMatch = tournament.matches.find(
@@ -179,7 +181,7 @@ router.post("/close", authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
-// Start tournament (create 3 rounds with random pairings for all participants)
+// Start tournament (create round 1 with random pairings for all participants)
 router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const tournament = await prisma.tournament.findFirst({
@@ -212,67 +214,90 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
       data: { is_open: false },
     });
 
-    const rounds = [];
-    const allMatches = [];
+    const round = await prisma.round.create({
+      data: {
+        tournament_id: tournament.id,
+        round_number: 1,
+        start_time: new Date(),
+      },
+    });
 
-    // Create 3 rounds
-    for (let roundNum = 1; roundNum <= 3; roundNum++) {
-      const round = await prisma.round.create({
-        data: {
-          tournament_id: tournament.id,
-          round_number: roundNum,
-          start_time: new Date(),
-        },
-      });
+    let selectedParticipants = [...participants].sort(
+      () => Math.random() - 0.5
+    );
+    const roundMatches = [];
+    let byePlayer = null;
 
-      let selectedParticipants = [...participants].sort(
-        () => Math.random() - 0.5
-      );
-      const roundMatches = [];
-
-      // Pair all participants randomly each round
-      for (let i = 0; i < selectedParticipants.length; i += 2) {
-        const player1 = selectedParticipants[i];
-        const player2 = selectedParticipants[i + 1];
-        if (player1 && player2) {
-          const match = await prisma.match.create({
-            data: {
-              tournament_id: tournament.id,
-              round_id: round.id,
-              player1_id: player1.id,
-              player2_id: player2.id,
-            },
-          });
-          roundMatches.push({
-            id: match.id,
+    // Pair all participants randomly for round 1, handle odd number with bye
+    for (let i = 0; i < selectedParticipants.length; i += 2) {
+      const player1 = selectedParticipants[i];
+      const player2 = selectedParticipants[i + 1];
+      if (player1 && player2) {
+        const match = await prisma.match.create({
+          data: {
+            tournament_id: tournament.id,
             round_id: round.id,
             player1_id: player1.id,
-            player1_username: player1.username,
-            player1_avatar_url: player1.profile_photo_url,
             player2_id: player2.id,
-            player2_username: player2.username,
-            player2_avatar_url: player2.profile_photo_url,
-            round: roundNum,
-          });
-          await prisma.notification.createMany({
-            data: [
-              {
-                user_id: player1.id,
-                tournament_id: tournament.id,
-                message: `You are paired against ${player2.username} in Round ${roundNum}.`,
-              },
-              {
-                user_id: player2.id,
-                tournament_id: tournament.id,
-                message: `You are paired against ${player1.username} in Round ${roundNum}.`,
-              },
-            ],
-          });
-        }
+          },
+        });
+        roundMatches.push({
+          id: match.id,
+          round_id: round.id,
+          player1_id: player1.id,
+          player1_username: player1.username,
+          player1_avatar_url: player1.profile_photo_url,
+          player2_id: player2.id,
+          player2_username: player2.username,
+          player2_avatar_url: player2.profile_photo_url,
+          round: 1,
+        });
+        await prisma.notification.createMany({
+          data: [
+            {
+              user_id: player1.id,
+              tournament_id: tournament.id,
+              message: `You are paired against ${player2.username} in Round 1.`,
+            },
+            {
+              user_id: player2.id,
+              tournament_id: tournament.id,
+              message: `You are paired against ${player1.username} in Round 1.`,
+            },
+          ],
+        });
+      } else if (player1 && !player2) {
+        // Odd number of participants, give bye
+        byePlayer = player1;
+        const byeMatch = await prisma.match.create({
+          data: {
+            tournament_id: tournament.id,
+            round_id: round.id,
+            player1_id: player1.id,
+            winner_id: player1.id, // Bye player automatically wins
+          },
+        });
+        roundMatches.push({
+          id: byeMatch.id,
+          round_id: round.id,
+          player1_id: player1.id,
+          player1_username: player1.username,
+          player1_avatar_url: player1.profile_photo_url,
+          player2_id: null,
+          player2_username: null,
+          player2_avatar_url: null,
+          winner_id: player1.id,
+          winner_username: player1.username,
+          round: 1,
+        });
+        await prisma.notification.create({
+          data: {
+            user_id: player1.id,
+            tournament_id: tournament.id,
+            message: `You have a bye in Round 1 and advance automatically.`,
+          },
+        });
       }
-
-      rounds.push({ ...round, matches: roundMatches });
-      allMatches.push(...roundMatches);
     }
 
     const updatedTournament = {
@@ -282,8 +307,9 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
     res.json({
       tournament: updatedTournament,
       participants,
-      rounds,
-      matches: allMatches,
+      rounds: [{ ...round, matches: roundMatches }],
+      matches: roundMatches,
+      byePlayer,
     });
   } catch (error) {
     console.error("Error starting tournament:", error);
