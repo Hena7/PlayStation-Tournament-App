@@ -25,6 +25,12 @@ const Header = () => {
               Home
             </a>
             <a
+              href="/rounds"
+              className="text-gray-300 hover:text-white hover:underline"
+            >
+              🏆 Rounds
+            </a>
+            <a
               href="/leaderboard"
               className="text-gray-300 hover:text-white hover:underline"
             >

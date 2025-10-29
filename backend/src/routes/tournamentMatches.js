@@ -50,18 +50,18 @@ router.get("/:tournamentId/matches", authMiddleware, async (req, res) => {
   }
 });
 
-// Update match winner
+// Update match winner and score
 router.put(
   "/matches/:matchId",
   authMiddleware,
   adminMiddleware,
   async (req, res) => {
     const { matchId } = req.params;
-    const { winner_id } = req.body;
+    const { winner_id, score } = req.body;
     try {
       const match = await prisma.match.update({
         where: { id: parseInt(matchId) },
-        data: { winner_id },
+        data: { winner_id, score },
         include: {
           player1: true,
           player2: true,

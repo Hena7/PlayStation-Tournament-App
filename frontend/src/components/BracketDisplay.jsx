@@ -41,6 +41,11 @@ function BracketDisplay({ matches }) {
                               (Winner: {match.winner_username})
                             </span>
                           )}
+                          {match.score && (
+                            <span className="text-gray-400 ml-2">
+                              Score: {match.score}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>

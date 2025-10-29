@@ -18,4 +18,5 @@ export const formatMatch = (match, req) => ({
   player2_avatar_url: match.player2?.profile_photo_url
     ? `${req.protocol}://${req.get("host")}${match.player2.profile_photo_url}`
     : null,
+  round: match.round?.round_number || match.round,
 });

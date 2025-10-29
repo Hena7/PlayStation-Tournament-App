@@ -9,6 +9,7 @@ import UserList from "./pages/UserList";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Leaderboard from "./pages/Leaderboard";
+import Rounds from "./pages/Rounds";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/rounds" element={<Rounds />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/signin" element={<AuthForm />} />
         <Route

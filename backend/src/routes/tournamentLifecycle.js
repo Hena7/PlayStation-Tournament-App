@@ -179,7 +179,7 @@ router.post("/close", authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
-// Start tournament (pair participants)
+// Start tournament (create 3 rounds with random pairings for all participants)
 router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const tournament = await prisma.tournament.findFirst({
@@ -212,81 +212,67 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
       data: { is_open: false },
     });
 
-    let selectedParticipants = [...participants].sort(
-      () => Math.random() - 0.5
-    );
-    let byePlayer = null;
-    const round = 1;
-    const matches = [];
+    const rounds = [];
+    const allMatches = [];
 
-    if (selectedParticipants.length % 2 !== 0) {
-      byePlayer = selectedParticipants.pop();
-      const byeMatch = await prisma.match.create({
+    // Create 3 rounds
+    for (let roundNum = 1; roundNum <= 3; roundNum++) {
+      const round = await prisma.round.create({
         data: {
           tournament_id: tournament.id,
-          player1_id: byePlayer.id,
-          winner_id: byePlayer.id,
-          round,
+          round_number: roundNum,
+          start_time: new Date(),
         },
       });
-      await prisma.notification.create({
-        data: {
-          user_id: byePlayer.id,
-          tournament_id: tournament.id,
-          message: `You have a bye in Round ${round} and advance automatically.`,
-        },
-      });
-      matches.push({
-        id: byeMatch.id,
-        player1_id: byePlayer.id,
-        player1_username: byePlayer.username,
-        player1_avatar_url: byePlayer.profile_photo_url,
-        player2_id: null,
-        player2_username: null,
-        player2_avatar_url: null,
-        winner_id: byePlayer.id,
-        winner_username: byePlayer.username,
-        round,
-      });
-    }
 
-    for (let i = 0; i < selectedParticipants.length; i += 2) {
-      const player1 = selectedParticipants[i];
-      const player2 = selectedParticipants[i + 1];
-      if (player1 && player2) {
-        const match = await prisma.match.create({
-          data: {
-            tournament_id: tournament.id,
+      let selectedParticipants = [...participants].sort(
+        () => Math.random() - 0.5
+      );
+      const roundMatches = [];
+
+      // Pair all participants randomly each round
+      for (let i = 0; i < selectedParticipants.length; i += 2) {
+        const player1 = selectedParticipants[i];
+        const player2 = selectedParticipants[i + 1];
+        if (player1 && player2) {
+          const match = await prisma.match.create({
+            data: {
+              tournament_id: tournament.id,
+              round_id: round.id,
+              player1_id: player1.id,
+              player2_id: player2.id,
+            },
+          });
+          roundMatches.push({
+            id: match.id,
+            round_id: round.id,
             player1_id: player1.id,
+            player1_username: player1.username,
+            player1_avatar_url: player1.profile_photo_url,
             player2_id: player2.id,
-            round,
-          },
-        });
-        matches.push({
-          id: match.id,
-          player1_id: player1.id,
-          player2_id: player2.id,
-          player1_username: player1.username,
-          player1_avatar_url: player1.profile_photo_url,
-          player2_username: player2.username,
-          player2_avatar_url: player2.profile_photo_url,
-          round,
-        });
-        await prisma.notification.createMany({
-          data: [
-            {
-              user_id: player1.id,
-              tournament_id: tournament.id,
-              message: `You are paired against ${player2.username} in Round ${round}.`,
-            },
-            {
-              user_id: player2.id,
-              tournament_id: tournament.id,
-              message: `You are paired against ${player1.username} in Round ${round}.`,
-            },
-          ],
-        });
+            player2_username: player2.username,
+            player2_avatar_url: player2.profile_photo_url,
+            round: roundNum,
+          });
+          await prisma.notification.createMany({
+            data: [
+              {
+                user_id: player1.id,
+                tournament_id: tournament.id,
+                message: `You are paired against ${player2.username} in Round ${roundNum}.`,
+              },
+              {
+                user_id: player2.id,
+                tournament_id: tournament.id,
+                message: `You are paired against ${player1.username} in Round ${roundNum}.`,
+              },
+            ],
+          });
+        }
       }
+
+      rounds.push({ ...round, matches: roundMatches });
+      allMatches.push(...roundMatches);
     }
 
     const updatedTournament = {
@@ -296,8 +282,8 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
     res.json({
       tournament: updatedTournament,
       participants,
-      matches,
-      byePlayer,
+      rounds,
+      matches: allMatches,
     });
   } catch (error) {
     console.error("Error starting tournament:", error);

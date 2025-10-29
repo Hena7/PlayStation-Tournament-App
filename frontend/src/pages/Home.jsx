@@ -76,11 +76,12 @@ function Home() {
             <CardContent>
               <ul className="list-disc list-inside space-y-2">
                 <li>
-                  Single-elimination tournament: win to advance, lose to be
-                  eliminated.
+                  3-round tournament: All players participate in each round with
+                  random pairings.
                 </li>
-                <li>Matches are assigned randomly by the admin.</li>
-                <li>Admins update winners after each match.</li>
+                <li>No elimination - players get 3 chances to play.</li>
+                <li>Matches are assigned randomly by the admin each round.</li>
+                <li>Admins update winners and scores after each match.</li>
                 <li>
                   Check your dashboard for real-time rankings and match updates.
                 </li>

@@ -59,6 +59,7 @@ function AuthForm() {
                   className="w-full"
                 />
                 <Input
+                  required
                   type="text"
                   placeholder="Username"
                   value={formData.username}
@@ -69,6 +70,7 @@ function AuthForm() {
                 />
 
                 <Input
+                  required
                   type="tel"
                   placeholder="Phone Number (+251...)"
                   value={formData.ethiopian_phone}
@@ -83,6 +85,7 @@ function AuthForm() {
               </>
             )}
             <Input
+              required
               type="email"
               placeholder="Email"
               value={formData.email}
@@ -92,6 +95,7 @@ function AuthForm() {
               className="w-full"
             />
             <Input
+              required
               type="password"
               placeholder="Password"
               value={formData.password}
