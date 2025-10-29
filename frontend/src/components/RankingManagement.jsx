@@ -22,12 +22,6 @@ function RankingManagement({ tournament, matches, participants, onUpdate }) {
         { winner_id: winnerId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Update user stats
-      await api.post(
-        "/api/ranking/update-stats",
-        { user_id: winnerId, result: "win" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
       const response = await api.get(
         `/api/tournament/${tournament.id}/matches`,
         {
@@ -56,7 +50,15 @@ function RankingManagement({ tournament, matches, participants, onUpdate }) {
     }
   };
 
-  const winners = matches.filter((m) => m.winner_id).map((m) => m.winner_id);
+  // Compute highest/current round and only consider matches for that round
+  const currentRoundNum =
+    matches.length > 0 ? Math.max(...matches.map((m) => m.round || 0)) : 0;
+  const currentRoundMatches = matches.filter(
+    (m) => m.round === currentRoundNum
+  );
+  const winners = currentRoundMatches
+    .filter((m) => m.winner_id)
+    .map((m) => m.winner_id);
 
   return (
     <Card className="bg-gray-800 border-none">
@@ -126,15 +128,16 @@ function RankingManagement({ tournament, matches, participants, onUpdate }) {
                   )}
                 </div>
               ))}
-            {matches.every((m) => m.winner_id) && (
-              <Button
-                onClick={handleNextRound}
-                className="mt-4 bg-primary"
-                disabled={winners.length <= 1}
-              >
-                Start Next Round
-              </Button>
-            )}
+            {currentRoundMatches.length > 0 &&
+              currentRoundMatches.every((m) => m.winner_id) && (
+                <Button
+                  onClick={handleNextRound}
+                  className="mt-4 bg-primary"
+                  disabled={winners.length <= 1}
+                >
+                  Start Next Round
+                </Button>
+              )}
           </>
         )}
       </CardContent>

@@ -39,6 +39,7 @@ router.get("/:tournamentId/matches", authMiddleware, async (req, res) => {
         player1: true,
         player2: true,
         winner: true,
+        round: true,
       },
     });
 
@@ -116,6 +117,7 @@ router.put(
           player1: true,
           player2: true,
           winner: true,
+          round: true,
         },
       });
 
@@ -146,10 +148,12 @@ router.post(
       const roundNum = currentRound ? currentRound.round_number : 0;
 
       // Get active participants based on losses
+      // Always exclude participants who have reached 3 or more losses
+      // (eliminated). Participants with losses < 3 are eligible.
       const participants = await prisma.participant.findMany({
         where: {
           tournament_id: tournamentId,
-          losses: roundNum < 3 ? { lt: 3 } : { lt: 2 }, // <3 for rounds 1-3, <2 for round 4+
+          losses: { lt: 3 }, // eliminated at 3 losses
         },
         include: { user: true },
       });

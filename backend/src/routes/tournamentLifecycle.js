@@ -20,6 +20,7 @@ router.get("/latest", authMiddleware, async (req, res) => {
             player1: true,
             player2: true,
             winner: true,
+            round: true,
           },
         },
       },

@@ -8,13 +8,26 @@ const router = express.Router();
 router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
   const { user_id, tournament_id, rank } = req.body;
   try {
-    const ranking = await prisma.ranking.create({
-      data: {
-        user_id: user_id,
-        tournament_id: tournament_id,
-        rank: rank,
-      },
+    // Prevent duplicate rankings for the same user/tournament. If a ranking
+    // already exists for this (user_id, tournament_id) pair, update it; otherwise create.
+    const existing = await prisma.ranking.findFirst({
+      where: { user_id: user_id, tournament_id: tournament_id },
     });
+    let ranking;
+    if (existing) {
+      ranking = await prisma.ranking.update({
+        where: { id: existing.id },
+        data: { rank: rank },
+      });
+    } else {
+      ranking = await prisma.ranking.create({
+        data: {
+          user_id: user_id,
+          tournament_id: tournament_id,
+          rank: rank,
+        },
+      });
+    }
     res.json(ranking);
   } catch (error) {
     console.error("Error posting ranking:", error);

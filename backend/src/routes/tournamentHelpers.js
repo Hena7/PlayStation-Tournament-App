@@ -18,5 +18,9 @@ export const formatMatch = (match, req) => ({
   player2_avatar_url: match.player2?.profile_photo_url
     ? `${req.protocol}://${req.get("host")}${match.player2.profile_photo_url}`
     : null,
-  round: match.round?.round_number || match.round,
+  // `match.round` may be a relation (object) when included, or not present
+  // so fall back to the foreign key `round_id` if needed. This prevents
+  // undefined/NaN round numbers in the frontend when the round relation
+  // wasn't included in the query.
+  round: match.round?.round_number || match.round_id || match.round,
 });
