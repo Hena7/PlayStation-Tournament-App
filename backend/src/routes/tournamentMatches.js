@@ -159,7 +159,10 @@ router.post(
       });
 
       const activeUsers = participants
-        .map((p) => formatProfilePhoto(p.user, req))
+        .map((p) => ({
+          ...formatProfilePhoto(p.user, req),
+          bye_count: p.bye_count,
+        }))
         .sort(() => Math.random() - 0.5);
 
       const nextRoundNum = roundNum + 1;
@@ -176,6 +179,10 @@ router.post(
       const matches = [];
 
       if (activeUsers.length % 2 !== 0) {
+        // Sort by bye_count ascending, then random for tie
+        activeUsers.sort(
+          (a, b) => a.bye_count - b.bye_count || Math.random() - 0.5
+        );
         byePlayer = activeUsers.pop();
         const byeMatch = await prisma.match.create({
           data: {
@@ -184,6 +191,16 @@ router.post(
             player1_id: byePlayer.id,
             winner_id: byePlayer.id, // Bye player automatically wins
           },
+        });
+        // Increment bye count
+        await prisma.participant.update({
+          where: {
+            user_id_tournament_id: {
+              user_id: byePlayer.id,
+              tournament_id: tournamentId,
+            },
+          },
+          data: { bye_count: { increment: 1 } },
         });
         await prisma.notification.create({
           data: {

@@ -132,19 +132,30 @@ function Rounds() {
                             </p>
                           </div>
                           <div className="text-right">
-                            {match.winner_username ? (
-                              <div>
-                                <p className="text-green-400 font-semibold">
-                                  Winner: {match.winner_username}
-                                </p>
-                                {match.score && (
-                                  <p className="text-gray-400 text-sm">
-                                    Score: {match.score}
+                            {match.player2_username ? (
+                              match.winner_username ? (
+                                <div>
+                                  <p className="text-green-400 font-semibold">
+                                    Winner: {match.winner_username}
                                   </p>
-                                )}
-                              </div>
+                                  {match.score && (
+                                    <p className="text-gray-400 text-sm">
+                                      Score: {match.score}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-yellow-400">Pending</p>
+                              )
                             ) : (
-                              <p className="text-yellow-400">Pending</p>
+                              <div>
+                                <p className="text-blue-400 font-semibold">
+                                  Bye: {match.player1_username}
+                                </p>
+                                <p className="text-gray-400 text-sm">
+                                  Auto-advance
+                                </p>
+                              </div>
                             )}
                           </div>
                         </div>

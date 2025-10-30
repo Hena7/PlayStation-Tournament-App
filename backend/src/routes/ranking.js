@@ -108,13 +108,12 @@ router.get("/leaderboard", async (req, res) => {
     // Build per-user stats map
     const statsMap = {};
     const ensureUser = (id) => {
-      if (!statsMap[id]) statsMap[id] = { gamesPlayed: 0, wins: 0, losses: 0 };
+      if (!statsMap[id])
+        statsMap[id] = { gamesPlayed: 0, wins: 0, losses: 0, byes: 0 };
     };
     for (const m of tournamentMatches) {
-      // If this is a bye match (player2_id === null), don't count it as a
-      // played game for the bye player and don't count the auto-win. Byes
-      // only advance the player to the next round but shouldn't affect
-      // gamesPlayed/wins/losses statistics.
+      // If this is a bye match (player2_id === null), count it as a
+      // played game and win for the bye player. Byes count as participation.
       const isBye = !m.player2_id;
 
       if (!isBye) {
@@ -131,10 +130,13 @@ router.get("/leaderboard", async (req, res) => {
           statsMap[m.winner_id].wins += 1;
         }
       } else {
-        // For bye matches we may still want to ensure the user entry exists
-        // so they show up on the leaderboard, but do not increment gamesPlayed
-        // or wins.
-        if (m.player1_id) ensureUser(m.player1_id);
+        // For bye matches, count as game played and win
+        if (m.player1_id) {
+          ensureUser(m.player1_id);
+          statsMap[m.player1_id].gamesPlayed += 1;
+          statsMap[m.player1_id].wins += 1;
+          statsMap[m.player1_id].byes += 1;
+        }
       }
     }
     // compute losses from gamesPlayed - wins
@@ -145,7 +147,12 @@ router.get("/leaderboard", async (req, res) => {
     // Map to leaderboard format using ranking rows order
     const leaderboard = rankings.map((ranking) => {
       const user = ranking.user;
-      const s = statsMap[user.id] || { gamesPlayed: 0, wins: 0, losses: 0 };
+      const s = statsMap[user.id] || {
+        gamesPlayed: 0,
+        wins: 0,
+        losses: 0,
+        byes: 0,
+      };
       const rankScore = s.wins * 3 + s.gamesPlayed * 0.5;
       const winRate =
         s.gamesPlayed > 0
@@ -158,6 +165,7 @@ router.get("/leaderboard", async (req, res) => {
         gamesPlayed: s.gamesPlayed,
         wins: s.wins,
         losses: s.losses,
+        byes: s.byes,
         winRate,
         rankScore: rankScore,
         rank: ranking.rank, // temporary

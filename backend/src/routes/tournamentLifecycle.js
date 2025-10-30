@@ -225,9 +225,10 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
       return res.status(404).json({ message: "No tournament found" });
     }
 
-    const participants = tournament.participants.map((p) =>
-      formatProfilePhoto(p.user, req)
-    );
+    const participants = tournament.participants.map((p) => ({
+      ...formatProfilePhoto(p.user, req),
+      bye_count: p.bye_count,
+    }));
 
     if (participants.length === 0) {
       return res
@@ -249,12 +250,12 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
     });
 
     let selectedParticipants = [...participants].sort(
-      () => Math.random() - 0.5
+      (a, b) => a.bye_count - b.bye_count || Math.random() - 0.5
     );
     const roundMatches = [];
     let byePlayer = null;
 
-    // Pair all participants randomly for round 1, handle odd number with bye
+    // Pair all participants, handle odd number with bye (fair selection)
     for (let i = 0; i < selectedParticipants.length; i += 2) {
       const player1 = selectedParticipants[i];
       const player2 = selectedParticipants[i + 1];
@@ -293,7 +294,7 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
           ],
         });
       } else if (player1 && !player2) {
-        // Odd number of participants, give bye
+        // Odd number of participants, give bye to player with least byes
         byePlayer = player1;
         const byeMatch = await prisma.match.create({
           data: {
@@ -315,6 +316,16 @@ router.post("/start", authMiddleware, adminMiddleware, async (req, res) => {
           winner_id: player1.id,
           winner_username: player1.username,
           round: 1,
+        });
+        // Increment bye count
+        await prisma.participant.update({
+          where: {
+            user_id_tournament_id: {
+              user_id: player1.id,
+              tournament_id: tournament.id,
+            },
+          },
+          data: { bye_count: { increment: 1 } },
         });
         await prisma.notification.create({
           data: {
