@@ -7,12 +7,15 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Button } from "../components/ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
 
 function Rounds() {
   const [rounds, setRounds] = useState([]);
-  const [expandedRounds, setExpandedRounds] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,30 +25,9 @@ function Rounds() {
         const response = await api.get("/api/tournament/latest", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const tournament = response.data.tournament;
-        const matches = response.data.matches;
+        const tournamentRounds = response.data.rounds || [];
 
-        if (tournament && matches.length > 0) {
-          // Group matches by round
-          const roundsMap = {};
-          matches.forEach((match) => {
-            const roundNum = match.round;
-            if (!roundsMap[roundNum]) {
-              roundsMap[roundNum] = [];
-            }
-            roundsMap[roundNum].push(match);
-          });
-
-          const roundsArray = Object.keys(roundsMap).map((roundNum) => ({
-            round_number: parseInt(roundNum),
-            matches: roundsMap[roundNum],
-            is_completed: roundsMap[roundNum].every((m) => m.winner_id),
-          }));
-
-          setRounds(
-            roundsArray.sort((a, b) => a.round_number - b.round_number)
-          );
-        }
+        setRounds(tournamentRounds);
       } catch (error) {
         console.error("Error fetching rounds:", error);
       } finally {
@@ -55,13 +37,6 @@ function Rounds() {
 
     fetchRounds();
   }, []);
-
-  const toggleRound = (roundNumber) => {
-    setExpandedRounds((prev) => ({
-      ...prev,
-      [roundNumber]: !prev[roundNumber],
-    }));
-  };
 
   if (loading) {
     return (
@@ -85,33 +60,35 @@ function Rounds() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
+          <Tabs
+            defaultValue={`round-${rounds[0].round_number}`}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-4 bg-gray-800">
+              {rounds.map((round) => (
+                <TabsTrigger
+                  key={round.round_number}
+                  value={`round-${round.round_number}`}
+                  className="text-white data-[state=active]:bg-primary data-[state=active]:text-white"
+                >
+                  Round {round.round_number}
+                  {round.is_completed && (
+                    <span className="ml-1 text-green-400">(Completed)</span>
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
             {rounds.map((round) => (
-              <Card
+              <TabsContent
                 key={round.round_number}
-                className="bg-gray-800 border-none"
+                value={`round-${round.round_number}`}
               >
-                <CardHeader>
-                  <CardTitle
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => toggleRound(round.round_number)}
-                  >
-                    <span className="text-white">
-                      Round {round.round_number}
-                      {round.is_completed && (
-                        <span className="ml-2 text-green-400">(Completed)</span>
-                      )}
-                    </span>
-                    <Button variant="ghost" size="sm">
-                      {expandedRounds[round.round_number] ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                {expandedRounds[round.round_number] && (
+                <Card className="bg-gray-800 border-none">
+                  <CardHeader>
+                    <CardTitle className="text-white">
+                      Round {round.round_number} Matches
+                    </CardTitle>
+                  </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {round.matches.map((match) => (
@@ -174,10 +151,10 @@ function Rounds() {
                       ))}
                     </div>
                   </CardContent>
-                )}
-              </Card>
+                </Card>
+              </TabsContent>
             ))}
-          </div>
+          </Tabs>
         )}
       </div>
     </div>

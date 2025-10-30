@@ -6,7 +6,7 @@ import { formatProfilePhoto, formatMatch } from "./tournamentHelpers.js";
 const router = express.Router();
 
 // Get latest tournament
-router.get("/latest", authMiddleware, async (req, res) => {
+router.get("/latest", async (req, res) => {
   try {
     const tournament = await prisma.tournament.findFirst({
       orderBy: { id: "desc" },
@@ -23,6 +23,18 @@ router.get("/latest", authMiddleware, async (req, res) => {
             round: true,
           },
         },
+        Round: {
+          include: {
+            matches: {
+              include: {
+                player1: true,
+                player2: true,
+                winner: true,
+              },
+            },
+          },
+          orderBy: { round_number: "asc" },
+        },
       },
     });
 
@@ -31,6 +43,7 @@ router.get("/latest", authMiddleware, async (req, res) => {
         tournament: null,
         participants: [],
         matches: [],
+        rounds: [],
         byePlayer: null,
       });
     }
@@ -42,7 +55,18 @@ router.get("/latest", authMiddleware, async (req, res) => {
     }));
     const matches = tournament.matches.map((match) => formatMatch(match, req));
 
-    const byePlayerMatch = tournament.matches.find(
+    const rounds = tournament.Round.map((round) => ({
+      round_number: round.round_number,
+      is_completed: round.is_completed,
+      start_time: round.start_time,
+      end_time: round.end_time,
+      matches: round.matches.map((match) => formatMatch(match, req)),
+    }));
+
+    // Use formatted matches (which include numeric `round`) to locate a bye
+    // player for round 1. We already created `matches` above by formatting
+    // tournament.matches, so search that array instead of the raw objects.
+    const byePlayerMatch = matches.find(
       (m) => m.player2_id === null && m.round === 1
     );
     const byePlayer = byePlayerMatch
@@ -58,6 +82,7 @@ router.get("/latest", authMiddleware, async (req, res) => {
       tournament: formattedTournament,
       participants,
       matches,
+      rounds,
       byePlayer,
     });
   } catch (error) {

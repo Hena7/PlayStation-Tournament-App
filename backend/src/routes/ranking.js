@@ -98,21 +98,66 @@ router.get("/leaderboard", async (req, res) => {
       orderBy: { rank: "asc" },
     });
 
-    // Map to leaderboard format
+    // Instead of using global user stats, compute per-tournament stats from
+    // the tournament's matches so the leaderboard reflects this tournament.
+    const tournamentMatches = await prisma.match.findMany({
+      where: { tournament_id: latestTournamentWithRankings.id },
+      select: { player1_id: true, player2_id: true, winner_id: true },
+    });
+
+    // Build per-user stats map
+    const statsMap = {};
+    const ensureUser = (id) => {
+      if (!statsMap[id]) statsMap[id] = { gamesPlayed: 0, wins: 0, losses: 0 };
+    };
+    for (const m of tournamentMatches) {
+      // If this is a bye match (player2_id === null), don't count it as a
+      // played game for the bye player and don't count the auto-win. Byes
+      // only advance the player to the next round but shouldn't affect
+      // gamesPlayed/wins/losses statistics.
+      const isBye = !m.player2_id;
+
+      if (!isBye) {
+        if (m.player1_id) {
+          ensureUser(m.player1_id);
+          statsMap[m.player1_id].gamesPlayed += 1;
+        }
+        if (m.player2_id) {
+          ensureUser(m.player2_id);
+          statsMap[m.player2_id].gamesPlayed += 1;
+        }
+        if (m.winner_id) {
+          ensureUser(m.winner_id);
+          statsMap[m.winner_id].wins += 1;
+        }
+      } else {
+        // For bye matches we may still want to ensure the user entry exists
+        // so they show up on the leaderboard, but do not increment gamesPlayed
+        // or wins.
+        if (m.player1_id) ensureUser(m.player1_id);
+      }
+    }
+    // compute losses from gamesPlayed - wins
+    Object.keys(statsMap).forEach((uid) => {
+      statsMap[uid].losses = statsMap[uid].gamesPlayed - statsMap[uid].wins;
+    });
+
+    // Map to leaderboard format using ranking rows order
     const leaderboard = rankings.map((ranking) => {
       const user = ranking.user;
-      const rankScore = user.wins * 3 + user.gamesPlayed * 0.5;
+      const s = statsMap[user.id] || { gamesPlayed: 0, wins: 0, losses: 0 };
+      const rankScore = s.wins * 3 + s.gamesPlayed * 0.5;
       const winRate =
-        user.gamesPlayed > 0
-          ? ((user.wins / user.gamesPlayed) * 100).toFixed(1) + "%"
+        s.gamesPlayed > 0
+          ? ((s.wins / s.gamesPlayed) * 100).toFixed(1) + "%"
           : "0%";
       return {
         id: user.id,
         username: user.username,
         profile_photo_url: user.profile_photo_url,
-        gamesPlayed: user.gamesPlayed,
-        wins: user.wins,
-        losses: user.losses,
+        gamesPlayed: s.gamesPlayed,
+        wins: s.wins,
+        losses: s.losses,
         winRate,
         rankScore: rankScore,
         rank: ranking.rank, // temporary

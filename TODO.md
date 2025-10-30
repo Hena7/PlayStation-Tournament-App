@@ -1,7 +1,4 @@
-- [x] Update schema.prisma to add losses field to Participant model
-- [x] Run prisma migrate to apply schema changes
-- [x] Modify /start endpoint in tournamentLifecycle.js to create only round 1 with all participants paired randomly, handle bye
-- [x] Modify /next-round endpoint in tournamentMatches.js to create Round, get active participants based on losses (<3 for rounds 1-3, <2 for round 4+), pair randomly, handle bye
-- [x] Update PUT /matches/:matchId to increment loser's losses in Participant when winner is set
-- [x] Update /latest endpoint to include losses in participants response
-- [ ] Test the tournament start and next round logic
+- [x] Modify backend/src/routes/tournamentLifecycle.js to include rounds with matches in the /latest endpoint response.
+- [x] Update frontend/src/pages/Rounds.jsx to display rounds using tabs instead of expandable cards.
+- [x] Test the changes to ensure Rounds page shows all rounds from the latest tournament.
+- [x] Fix authentication issue by wrapping Rounds route with ProtectedRoute.
