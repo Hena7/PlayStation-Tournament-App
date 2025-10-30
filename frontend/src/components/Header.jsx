@@ -23,7 +23,6 @@ const Header = () => {
               alt="Tournament Manager"
               className="h-12 md:h-16 transition-transform group-hover:scale-105"
             />
-            <Trophy className="ml-2 h-6 w-6 text-yellow-400 hidden sm:block animate-pulse" />
           </a>
 
           {/* Desktop Nav */}
