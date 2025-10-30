@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { BookOpen, UserPlus } from "lucide-react";
+import { BookOpen, UserPlus, Trophy } from "lucide-react";
 import Footer from "../components/Footer";
 import {
   Card,
@@ -38,7 +38,7 @@ function Home() {
       </div>
       {/* Info Cards */}
       <div className="max-w-6xl mx-auto px-4 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* How to Register Card */}
           <Card className="bg-gray-800 border-none text-gray-200 hover:translate-y-[-15px] transition-shadow hover:shadow-lg animate-fade-in opacity-80">
             <CardHeader>
@@ -84,6 +84,44 @@ function Home() {
                 <li>Admins update winners and scores after each match.</li>
                 <li>
                   Check your dashboard for real-time rankings and match updates.
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Ranking Calculation Card */}
+          <Card className="bg-gray-800 border-none text-gray-200 hover:translate-y-[-15px] transition-shadow hover:shadow-lg animate-fade-in opacity-80">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Trophy className="h-6 w-6 mr-2 text-white" />
+                Ranking Calculation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc list-inside space-y-2">
+                <li>
+                  <strong>Rank:</strong> Determined by rank score (wins × 3 +
+                  games played × 0.5), sorted descending.
+                </li>
+                <li>
+                  <strong>Games Played:</strong> Total matches participated in
+                  the tournament, including byes.
+                </li>
+                <li>
+                  <strong>Wins:</strong> Number of matches won, including byes
+                  (byes count as wins).
+                </li>
+                <li>
+                  <strong>Losses:</strong> Calculated as games played minus
+                  wins.
+                </li>
+                <li>
+                  <strong>Byes:</strong> Matches where a player has no opponent,
+                  counted as a win and game played.
+                </li>
+                <li>
+                  <strong>Win Rate:</strong> Percentage of wins out of games
+                  played (wins / games played × 100).
                 </li>
               </ul>
             </CardContent>
