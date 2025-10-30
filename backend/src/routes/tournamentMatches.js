@@ -179,11 +179,58 @@ router.post(
       const matches = [];
 
       if (activeUsers.length % 2 !== 0) {
-        // Sort by bye_count ascending, then random for tie
-        activeUsers.sort(
-          (a, b) => a.bye_count - b.bye_count || Math.random() - 0.5
-        );
-        byePlayer = activeUsers.pop();
+        // Ensure byes are distributed fairly:
+        // 1) Prefer participants with the minimal bye_count (ensures everyone gets a bye before repeats)
+        // 2) If multiple candidates have the same bye_count, pick the one whose last bye was the longest time ago
+        //    (we derive "last bye" from previous matches where player2_id is null and look at the round number)
+
+        // Determine minimal bye_count among active users
+        const minByeCount = Math.min(...activeUsers.map((u) => u.bye_count));
+
+        // Candidates are those with minimal bye_count
+        let candidates = activeUsers.filter((u) => u.bye_count === minByeCount);
+
+        // If multiple candidates, find their last bye round (older = smaller round_number).
+        if (candidates.length > 1) {
+          // Fetch bye matches for this tournament and map last bye round per user
+          const byeMatches = await prisma.match.findMany({
+            where: { tournament_id: tournamentId, player2_id: null },
+            include: { round: true },
+          });
+
+          const lastByeRound = {};
+          for (const m of byeMatches) {
+            const userId = m.player1_id;
+            const rnum = m.round?.round_number ?? 0;
+            if (!userId) continue;
+            if (!lastByeRound[userId] || rnum > lastByeRound[userId]) {
+              lastByeRound[userId] = rnum;
+            }
+          }
+
+          // Sort candidates by their last bye round ascending (oldest first). If never had a bye, treat as 0 -> highest priority.
+          candidates.sort((a, b) => {
+            const aLast = lastByeRound[a.id] ?? 0;
+            const bLast = lastByeRound[b.id] ?? 0;
+            if (aLast !== bLast) return aLast - bLast;
+            // tie-breaker: random
+            return Math.random() - 0.5;
+          });
+        }
+
+        // Pick bye player from candidates and remove them from activeUsers
+        const selectedBye = candidates[0];
+        const idx = activeUsers.findIndex((u) => u.id === selectedBye.id);
+        if (idx !== -1) {
+          byePlayer = activeUsers.splice(idx, 1)[0];
+        } else {
+          // Fallback: if something went wrong, fall back to previous behavior
+          activeUsers.sort(
+            (a, b) => a.bye_count - b.bye_count || Math.random() - 0.5
+          );
+          byePlayer = activeUsers.pop();
+        }
+
         const byeMatch = await prisma.match.create({
           data: {
             tournament_id: tournamentId,
