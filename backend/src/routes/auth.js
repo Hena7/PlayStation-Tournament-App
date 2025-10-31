@@ -16,6 +16,14 @@ router.post("/register", async (req, res) => {
     controller_id,
     is_admin,
   } = req.body;
+
+  // Backend validation
+  if (!username || !email || !password || !ethiopian_phone) {
+    return res.status(400).json({
+      message: "Username, email, password, and phone number are required",
+    });
+  }
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
@@ -59,7 +67,15 @@ router.post("/register", async (req, res) => {
     }
     res.json({ token, user });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error.code === "P2002") {
+      // Unique constraint violation
+      const field = error.meta?.target?.includes("username")
+        ? "Username"
+        : "Email";
+      res.status(400).json({ message: `${field} already exists` });
+    } else {
+      res.status(500).json({ message: error.message });
+    }
   }
 });
 

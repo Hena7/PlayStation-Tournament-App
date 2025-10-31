@@ -14,12 +14,12 @@ model User {
   id                Int     @id @default(autoincrement())
   username          String  @unique
   password          String
-  email             String? @unique
+  email             String  @unique
   is_admin          Boolean @default(false)
   profile_photo_url String?
   avatar_url        String?
   full_name         String?
-  ethiopian_phone   String?
+  ethiopian_phone   String
   gamesPlayed       Int     @default(0)
   wins              Int     @default(0)
   losses            Int     @default(0)

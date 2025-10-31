@@ -17,11 +17,32 @@ function AuthForm() {
     full_name: "",
     ethiopian_phone: "",
   });
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateForm = () => {
+    const newErrors = {};
+    if (!isLogin) {
+      if (!formData.username.trim())
+        newErrors.username = "Username is required";
+      if (!formData.email.trim()) newErrors.email = "Email is required";
+      if (!formData.password.trim())
+        newErrors.password = "Password is required";
+      if (!formData.ethiopian_phone.trim())
+        newErrors.ethiopian_phone = "Phone number is required";
+    } else {
+      if (!formData.email.trim()) newErrors.email = "Email is required";
+      if (!formData.password.trim())
+        newErrors.password = "Password is required";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setIsLoading(true);
     try {
       const url = isLogin ? `/api/auth/login` : `/api/auth/register`;
@@ -33,6 +54,11 @@ function AuthForm() {
       navigate(response.data.user.is_admin ? "/admin" : "/dashboard");
     } catch (error) {
       console.error("Auth error:", error);
+      if (isLogin && error.response?.status === 401) {
+        setErrors({ general: "Email or password is incorrect" });
+      } else {
+        setErrors({ general: "An error occurred. Please try again." });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -47,63 +73,96 @@ function AuthForm() {
             {isLogin ? "Login" : "Register"}
           </h1>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {errors.general && (
+              <div className="text-red-500 text-sm text-center">
+                {errors.general}
+              </div>
+            )}
             {!isLogin && (
               <>
-                <Input
-                  type="text"
-                  placeholder="Full Name"
-                  value={formData.full_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, full_name: e.target.value })
-                  }
-                  className="w-full"
-                />
-                <Input
-                  required
-                  type="text"
-                  placeholder="Username"
-                  value={formData.username}
-                  onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
-                  }
-                  className="w-full"
-                />
+                <div>
+                  <Input
+                    type="text"
+                    placeholder="Full Name"
+                    value={formData.full_name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, full_name: e.target.value })
+                    }
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <Input
+                    required
+                    type="text"
+                    placeholder="Username"
+                    value={formData.username}
+                    onChange={(e) =>
+                      setFormData({ ...formData, username: e.target.value })
+                    }
+                    className="w-full"
+                  />
+                  {errors.username && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {errors.username}
+                    </div>
+                  )}
+                </div>
 
-                <Input
-                  required
-                  type="tel"
-                  placeholder="Phone Number (+251...)"
-                  value={formData.ethiopian_phone}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      ethiopian_phone: e.target.value,
-                    })
-                  }
-                  className="w-full"
-                />
+                <div>
+                  <Input
+                    required
+                    type="tel"
+                    placeholder="Phone Number (+251...)"
+                    value={formData.ethiopian_phone}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        ethiopian_phone: e.target.value,
+                      })
+                    }
+                    className="w-full"
+                  />
+                  {errors.ethiopian_phone && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {errors.ethiopian_phone}
+                    </div>
+                  )}
+                </div>
               </>
             )}
-            <Input
-              required
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="w-full"
-            />
-            <Input
-              required
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              className="w-full"
-            />
+            <div>
+              <Input
+                required
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="w-full"
+              />
+              {errors.email && (
+                <div className="text-red-500 text-sm mt-1">{errors.email}</div>
+              )}
+            </div>
+            <div>
+              <Input
+                required
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className="w-full"
+              />
+              {errors.password && (
+                <div className="text-red-500 text-sm mt-1">
+                  {errors.password}
+                </div>
+              )}
+            </div>
             <Button
               type="submit"
               className="w-full bg-primary"
@@ -139,7 +198,10 @@ function AuthForm() {
           </form>
           <Button
             variant="link"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setErrors({});
+            }}
             className="mt-4 w-full text-blue-400"
           >
             {isLogin ? "Need an account? Register" : "Have an account? Login"}

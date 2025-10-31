@@ -1,20 +1,8 @@
-# TODO: Implement Bye Handling for Odd Number of Players
+# TODO for Auth Form Validation
 
-## Backend Changes
-
-- [x] Add `bye_count` field to Participant model in schema.prisma
-- [x] Run Prisma migration for the new field
-- [x] Update tournament start logic in tournamentLifecycle.js to select bye fairly
-- [x] Update next-round logic in tournamentMatches.js to select bye fairly
-- [x] Update ranking.js to count byes in gamesPlayed and wins
-
-## Frontend Changes
-
-- [x] Update Leaderboard.jsx to display "X + Y bye" format for games played and wins
-- [x] Update Rounds.jsx to show "Bye" for bye matches instead of "vs"
-
-## Testing
-
-- [x] Test bye selection logic
-- [x] Test leaderboard display
-- [x] Test rounds display
+- [x] Add error state to AuthForm.jsx for displaying validation messages
+- [x] Implement client-side validation for registration: check required fields (username, email, password, phone number)
+- [x] Display "This field is required" messages for empty required fields in registration
+- [x] Handle backend error for login: display "Email or password is incorrect" when credentials are invalid
+- [x] Update form UI to show error messages below inputs
+- [x] Test login and registration with invalid inputs
