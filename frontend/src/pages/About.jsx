@@ -50,7 +50,7 @@ function About() {
               </p>
               <Button
                 onClick={() => navigate("/signin")}
-                className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+                className="bg-primary hover:shadow-xl hover:shadow-primary/30 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-lg"
               >
                 Join Now
               </Button>

@@ -140,7 +140,7 @@ function Rounds() {
                     onClick={() =>
                       setActiveRound(`round-${round.round_number}`)
                     }
-                    className={`px-5 py-2.5 rounded-lg font-medium transition-all
+                    className={`px-5 py-2.5 rounded-full font-medium transition-all
                     ${
                       activeRound === `round-${round.round_number}`
                         ? "bg-primary text-white shadow-lg"
