@@ -19,7 +19,7 @@ function Home() {
       <Header />
 
       {/* Hero Section */}
-      <div className="flex-1 flex items-center justify-center relative mb-20">
+      <div className="flex-1 flex items-center justify-center relative mb-14">
         <div className="absolute inset-0 flex items-center justify-center opacity-50">
           <img
             src="/hero.jpg"

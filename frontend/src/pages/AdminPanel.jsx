@@ -15,6 +15,8 @@ import ParticipantList from "../components/ParticipantList";
 import TournamentControls from "../components/TournamentControls";
 import BracketDisplay from "../components/BracketDisplay";
 import RankingManagement from "../components/RankingManagement";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 function AdminPanel() {
   const [user, setUser] = useState(null);
@@ -162,183 +164,187 @@ function AdminPanel() {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gradient-to-br from-blue-900 to-black">
-      <div className="max-w-6xl mx-auto">
-        {/* Admin Profile Section */}
-        <Card className="bg-gray-800 border-none mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <span className="mr-2">👑</span>
-              Admin Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16 border-2 border-primary">
-                  <AvatarImage src={preview} alt={user.username} />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                    {user.username
-                      ? user.username.charAt(0).toUpperCase()
-                      : "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-lg font-semibold">{user.username}</p>
-                  <p className="text-gray-400">{user.email}</p>
+    <>
+      <Header />
+      <div className="min-h-screen p-8 bg-gradient-to-br from-blue-900 to-black">
+        <div className="max-w-6xl mx-auto">
+          {/* Admin Profile Section */}
+          <Card className="bg-gray-800 border-none mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <span className="mr-2">👑</span>
+                Admin Profile
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-16 w-16 border-2 border-primary">
+                    <AvatarImage src={preview} alt={user.username} />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
+                      {user.username
+                        ? user.username.charAt(0).toUpperCase()
+                        : "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-lg font-semibold">{user.username}</p>
+                    <p className="text-gray-400">{user.email}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {isEditingProfile ? (
-                  <form onSubmit={handleProfileSubmit} className="space-y-4">
-                    <Input
-                      type="file"
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="file:mr-4 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-700"
-                    />
-                    {preview && profilePicFile && (
-                      <p className="text-sm text-green-400">
-                        ✅ New photo selected
-                      </p>
-                    )}
-                    <div>
+                <div className="flex items-center space-x-2">
+                  {isEditingProfile ? (
+                    <form onSubmit={handleProfileSubmit} className="space-y-4">
+                      <Input
+                        type="file"
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="file:mr-4 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-700"
+                      />
+                      {preview && profilePicFile && (
+                        <p className="text-sm text-green-400">
+                          ✅ New photo selected
+                        </p>
+                      )}
+                      <div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setIsEditingProfile(false);
+                            setProfilePicFile(null);
+                            setPreview(user.profile_photo_url);
+                          }}
+                          className="border-gray-600 hover:bg-gray-700"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isLoading}
+                          className="bg-primary hover:bg-blue-700"
+                        >
+                          {isLoading ? (
+                            <>
+                              <span className="animate-spin mr-2">⏳</span>
+                              Saving...
+                            </>
+                          ) : (
+                            "Save Photo"
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="flex justify-end space-x-2">
                       <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setIsEditingProfile(false);
-                          setProfilePicFile(null);
-                          setPreview(user.profile_photo_url);
-                        }}
-                        className="border-gray-600 hover:bg-gray-700"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
+                        onClick={() => setIsEditingProfile(true)}
                         className="bg-primary hover:bg-blue-700"
                       >
-                        {isLoading ? (
-                          <>
-                            <span className="animate-spin mr-2">⏳</span>
-                            Saving...
-                          </>
-                        ) : (
-                          "Save Photo"
-                        )}
+                        ✏️ Change Profile Picture
                       </Button>
+                      <Button
+                        onClick={handleLogout}
+                        variant="destructive"
+                        className="bg-red-600 hover:bg-red-900"
+                      >
+                        Logout
+                      </Button>{" "}
                     </div>
-                  </form>
-                ) : (
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      onClick={() => setIsEditingProfile(true)}
-                      className="bg-primary hover:bg-blue-700"
-                    >
-                      ✏️ Change Profile Picture
-                    </Button>
-                    <Button
-                      onClick={handleLogout}
-                      variant="destructive"
-                      className="bg-red-600 hover:bg-red-900"
-                    >
-                      Logout
-                    </Button>{" "}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        {/* All Users */}
+            </CardContent>
+          </Card>
+          {/* All Users */}
 
-        <div
-          onClick={() => navigate("/admin/users")}
-          className="text-green-300 pl-6 mb-7 hover:scale-95 hover:cursor-pointer underline "
-        >
-          Show All Users
-        </div>
+          <div
+            onClick={() => navigate("/admin/users")}
+            className="text-green-300 pl-6 mb-7 hover:scale-95 hover:cursor-pointer underline "
+          >
+            Show All Users
+          </div>
 
-        {/* Tournament Creation */}
-        <TournamentCreation
-          onCreate={handleCreateTournament}
-          disabled={!!tournament}
-        />
-
-        {/* Tournament Controls */}
-        <TournamentControls
-          tournament={tournament}
-          onClose={handleCloseTournament}
-          onReset={handleResetTournament}
-        />
-
-        {/* Tournament Participants */}
-        {tournament && (
-          <ParticipantList
-            participants={participants}
-            maxPlayers={tournament.max_players}
+          {/* Tournament Creation */}
+          <TournamentCreation
+            onCreate={handleCreateTournament}
+            disabled={!!tournament}
           />
-        )}
 
-        {/* Start Tournament Button */}
-        {tournament && participants.length > 0 && (
-          <Card className="bg-gray-800 border-none mb-8">
-            <CardHeader>
-              <CardTitle>Start Tournament</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={handleStartTournament}
-                className="bg-green-600 hover:bg-green-700"
-                disabled={matches.length > 0}
-              >
-                Start Tournament
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Bye Player */}
-        {byePlayer && (
-          <Card className="bg-gray-800 border-none mb-8">
-            <CardHeader>
-              <CardTitle>Bye Player</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg">
-                <Avatar className="h-10 w-10 border-2 border-primary">
-                  <AvatarImage
-                    src={byePlayer.profile_photo_url}
-                    alt={byePlayer.username}
-                  />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                    {byePlayer.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <p className="font-semibold">
-                  {byePlayer.username} (Advances to next round)
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Tournament Bracket */}
-        <BracketDisplay matches={matches} />
-
-        {/* Manage Rankings */}
-        {tournament && matches.length > 0 && (
-          <RankingManagement
+          {/* Tournament Controls */}
+          <TournamentControls
             tournament={tournament}
-            matches={matches}
-            participants={participants}
-            onUpdate={handleUpdateMatches}
+            onClose={handleCloseTournament}
+            onReset={handleResetTournament}
           />
-        )}
+
+          {/* Tournament Participants */}
+          {tournament && (
+            <ParticipantList
+              participants={participants}
+              maxPlayers={tournament.max_players}
+            />
+          )}
+
+          {/* Start Tournament Button */}
+          {tournament && participants.length > 0 && (
+            <Card className="bg-gray-800 border-none mb-8">
+              <CardHeader>
+                <CardTitle>Start Tournament</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={handleStartTournament}
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={matches.length > 0}
+                >
+                  Start Tournament
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Bye Player */}
+          {byePlayer && (
+            <Card className="bg-gray-800 border-none mb-8">
+              <CardHeader>
+                <CardTitle>Bye Player</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg">
+                  <Avatar className="h-10 w-10 border-2 border-primary">
+                    <AvatarImage
+                      src={byePlayer.profile_photo_url}
+                      alt={byePlayer.username}
+                    />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
+                      {byePlayer.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="font-semibold">
+                    {byePlayer.username} (Advances to next round)
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tournament Bracket */}
+          <BracketDisplay matches={matches} />
+
+          {/* Manage Rankings */}
+          {tournament && matches.length > 0 && (
+            <RankingManagement
+              tournament={tournament}
+              matches={matches}
+              participants={participants}
+              onUpdate={handleUpdateMatches}
+            />
+          )}
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }
 

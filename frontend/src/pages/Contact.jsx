@@ -28,7 +28,7 @@ function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-black flex flex-col mb-16">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-black flex flex-col mb-16">
       <Header />
 
       <div className="flex-1 relative overflow-hidden">
@@ -73,7 +73,7 @@ function Contact() {
                         <div>
                           <p className="text-sm text-gray-400">Email</p>
                           <p className="text-white font-medium">
-                            support@bekishatournament.com
+                            support@bekisha.com
                           </p>
                         </div>
                       </div>

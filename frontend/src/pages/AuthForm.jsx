@@ -64,8 +64,8 @@ function AuthForm() {
   return (
     <>
       <Header />
-      <div className=" bg-gradient-to-br from-blue-900 to-black flex items-center justify-center p-4 mb-20">
-        <div className="w-full max-w-md">
+      <div className=" bg-gradient-to-br from-blue-900 to-black flex items-center justify-center p-4">
+        <div className="w-full max-w-md  mb-20">
           {/* Trophy Header */}
           <div className="text-center mb-8">
             <Trophy className="h-12 w-12 text-yellow-400 mx-auto animate-pulse" />
