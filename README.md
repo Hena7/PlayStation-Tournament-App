@@ -1,210 +1,45 @@
-# PlayStation Tournament App
+# 🎮 PlayStation Tournament App 🏆
 
-## Project Structure
+Welcome to the **PlayStation Tournament App**! This is a full-stack web application designed to manage and organize PlayStation gaming tournaments. Whether you're a casual gamer or a competitive enthusiast, this app lets you create tournaments, register participants, track matches, and view rankings—all in one place. Built with modern technologies for a seamless experience! 🚀
 
-```
-tournament-app/
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── ui/
-│   │   │   ├── AuthForm.jsx
-│   │   │   ├── UserDashboard.jsx
-│   │   │   └── AdminPanel.jsx
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   ├── index.css
-│   │   └── lib/
-│   │       └── utils.js
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   └── postcss.config.js
-├── backend/
-│   ├── src/
-│   │   ├── routes/
-│   │   │   ├── auth.js
-│   │   │   ├── tournament.js
-│   │   │   └── ranking.js
-│   │   ├── config/
-│   │   │   └── db.js
-│   │   ├── middleware/
-│   │   │   └── auth.js
-│   │   └── server.js
-│   ├── package.json
-│   └── .env
-└── README.md
-```
+## ✨ Features
 
-## Database Setup
+- **🔐 User Authentication**: Secure login and registration with JWT tokens.
+- **👤 User Profiles**: Manage profiles with avatars, stats (wins, losses), and favorite games.
+- **🏟️ Tournament Management**: Admins can create, open, and manage tournaments with customizable player limits.
+- **📋 Participant Registration**: Users can apply to join tournaments easily.
+- **⚔️ Match Scheduling**: Automated round and match generation for fair play.
+- **📊 Rankings & Leaderboards**: Track player performance and tournament standings.
+- **🔔 Notifications**: Get updates on tournament events and match results.
+- **📱 Responsive Design**: Works great on desktop and mobile devices.
+- **🎯 Bracket Display**: Visualize tournament brackets for an engaging view.
 
-Run the following SQL commands in your PostgreSQL database to create the necessary tables:
+## 🛠️ Tech Stack
 
-```sql
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    is_admin BOOLEAN DEFAULT false
-);
+### Backend
 
-CREATE TABLE tournaments (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    admin_id INTEGER REFERENCES users(id)
-);
+- **Node.js** & **Express.js**: Server-side logic and API endpoints.
+- **Prisma**: ORM for database management with PostgreSQL.
+- **PostgreSQL**: Robust database for storing users, tournaments, matches, and more.
+- **JWT**: Secure authentication.
+- **Multer**: File uploads for profile photos.
+- **Bcrypt**: Password hashing.
 
-CREATE TABLE participants (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    tournament_id INTEGER REFERENCES tournaments(id)
-);
+### Frontend
 
-CREATE TABLE matches (
-    id SERIAL PRIMARY KEY,
-    tournament_id INTEGER REFERENCES tournaments(id),
-    player1_id INTEGER REFERENCES users(id),
-    player2_id INTEGER REFERENCES users(id),
-    winner_id INTEGER REFERENCES users(id),
-    round INTEGER NOT NULL
-);
+- **React**: Component-based UI with hooks.
+- **Vite**: Fast build tool and development server.
+- **Tailwind CSS**: Utility-first styling for a modern look.
+- **React Router**: Client-side routing.
+- **Axios**: HTTP client for API calls.
+- **Radix UI**: Accessible UI components.
+- **Lucide React**: Beautiful icons.
 
-CREATE TABLE rankings (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    tournament_id INTEGER REFERENCES tournaments(id),
-    rank INTEGER NOT NULL
-);
+## 📖 Usage
 
-CREATE TABLE notifications (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id),
-  tournament_id INTEGER REFERENCES tournaments(id),
-  message VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-DROP TABLE IF EXISTS rankings;
-DROP TABLE IF EXISTS matches;
-DROP TABLE IF EXISTS participants;
-DROP TABLE IF EXISTS notifications;
-DROP TABLE IF EXISTS tournaments;
-
-CREATE TABLE tournaments (
-id SERIAL PRIMARY KEY,
-name VARCHAR(255) NOT NULL,
-admin_id INTEGER REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE participants (
-id SERIAL PRIMARY KEY,
-user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE
-);
-
-CREATE TABLE matches (
-id SERIAL PRIMARY KEY,
-tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
-player1_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-player2_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-winner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-round INTEGER NOT NULL
-);
-
-CREATE TABLE rankings (
-id SERIAL PRIMARY KEY,
-user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
-rank INTEGER NOT NULL
-);
-
-CREATE TABLE notifications (
-id SERIAL PRIMARY KEY,
-user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
-message VARCHAR(255) NOT NULL,
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-````
-```sql
-DROP TABLE IF EXISTS rankings;
-DROP TABLE IF EXISTS matches;
-DROP TABLE IF EXISTS participants;
-DROP TABLE IF EXISTS notifications;
-DROP TABLE IF EXISTS tournaments;
-
-CREATE TABLE tournaments (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  admin_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  max_players INTEGER NOT NULL,
-  is_open BOOLEAN DEFAULT TRUE
-);
-
-CREATE TABLE participants (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
-  applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE matches (
-  id SERIAL PRIMARY KEY,
-  tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
-  player1_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  player2_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  winner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  round INTEGER NOT NULL
-);
-
-CREATE TABLE rankings (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
-  rank INTEGER NOT NULL
-);
-
-CREATE TABLE notifications (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
-  message VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-````
-
-## Setup Instructions
-
-1. **Backend**:
-
-   - Navigate to the `backend` folder and run `npm install`.
-   - Create a `.env` file with the `DATABASE_URL` and `JWT_SECRET`.
-   - Run `npm run dev` to start the backend server.
-
-2. **Frontend**:
-
-   - Navigate to the `frontend` folder and run `npm install`.
-   - Run `npm run dev` to start the Vite development server.
-
-3. **Database**:
-   - Set up a PostgreSQL database and run the provided SQL commands.
-   - Update the `.env` file with your database credentials.
-
-## Scalability Notes
-
-- **Backend**: Uses Express with a modular route structure and PostgreSQL for scalability. Connection pooling is handled by the `pg` library.
-- **Frontend**: Vite and React ensure fast builds and a responsive UI. Tailwind CSS and Shadcn/ui components provide a scalable and maintainable UI.
-- **Database**: PostgreSQL supports large datasets and concurrent connections, with foreign keys ensuring data integrity.
-
-## UI/UX Design
-
-- The interface uses a dark theme with a blue gradient for a modern, gaming-inspired aesthetic.
-- Shadcn/ui components ensure a polished and accessible UI.
-- Responsive design works on both desktop and mobile devices.
-
-```
-
-```
+- **Register/Login**: Create an account or log in to access features.
+- **Create a Tournament** (Admins): Go to the Admin Panel to set up new tournaments.
+- **Join a Tournament**: Browse open tournaments and apply as a participant.
+- **View Matches**: Check your scheduled matches and update results.
+- **Leaderboards**: See rankings and stats on the Leaderboard page.
+- **Profile Management**: Update your profile, upload photos, and track your gaming history.
