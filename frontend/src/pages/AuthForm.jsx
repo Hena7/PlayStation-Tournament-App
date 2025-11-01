@@ -96,7 +96,7 @@ function AuthForm() {
                     </label>
                     <Input
                       type="text"
-                      placeholder="John Doe"
+                      placeholder="Abebe Bekele"
                       value={formData.full_name}
                       onChange={(e) =>
                         setFormData({ ...formData, full_name: e.target.value })
@@ -111,7 +111,7 @@ function AuthForm() {
                     </label>
                     <Input
                       type="text"
-                      placeholder="gamerpro123"
+                      placeholder="TigerWarrior"
                       value={formData.username}
                       onChange={(e) =>
                         setFormData({ ...formData, username: e.target.value })

@@ -16,13 +16,13 @@ const Header = () => {
   return (
     <nav className="bg-gray-800/95 backdrop-blur-sm sticky top-0 z-50 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 md:h-20">
+        <div className="flex justify-between items-center h-16 md:h-16">
           {/* Logo */}
           <a href="/" className="flex items-center group">
             <img
               src="/Logo.png"
               alt="Tournament Manager"
-              className="h-12 md:h-16 transition-transform group-hover:scale-105"
+              className="h-9 md:h-12 transition-transform group-hover:scale-105"
             />
           </a>
 
