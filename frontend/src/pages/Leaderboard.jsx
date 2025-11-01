@@ -92,7 +92,7 @@ const Leaderboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-black">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-900 to-black">
       <Header />
       <div className="flex-1 px-4 sm:px-6 py-8 sm:py-12">
         <div className="max-w-6xl mx-auto">
