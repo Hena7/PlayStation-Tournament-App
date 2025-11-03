@@ -11,6 +11,7 @@ function UserProfile() {
   const [profilePicFile, setProfilePicFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     console.log(
@@ -33,7 +34,30 @@ function UserProfile() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     console.log("UserProfile: File selected:", file?.name);
+    setErrorMessage(""); // Clear previous error messages
+
     if (file) {
+      // Check file size (5 MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5 MB in bytes
+      if (file.size > maxSize) {
+        setErrorMessage("File size should be smaller than 5 MB");
+        e.target.value = ""; // Clear the file input
+        return;
+      }
+
+      // Check file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        setErrorMessage("Only image files are allowed!");
+        e.target.value = ""; // Clear the file input
+        return;
+      }
+
       setProfilePicFile(file);
       setPreview(URL.createObjectURL(file));
     }
@@ -224,6 +248,13 @@ function UserProfile() {
             </Button>
           )}
         </div>
+
+        {/* ERROR MESSAGE */}
+        {errorMessage && (
+          <div className="p-3 bg-red-900/30 border border-red-500 rounded-md text-red-300 text-sm">
+            ❌ {errorMessage}
+          </div>
+        )}
 
         {/* VISUAL STATUS INDICATOR */}
         {isEditing && (

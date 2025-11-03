@@ -1,12 +1,13 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import prisma from "../config/db.js";
 import { authMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Multer Configuration
+// Multer Configuration with file size limit
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "public/uploads/");
@@ -20,7 +21,23 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif/;
+    const extname = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed!"));
+    }
+  },
+});
 
 // GET USER DATA
 router.get("/me", authMiddleware, async (req, res) => {
@@ -136,6 +153,21 @@ router.post(
     const photoUrl = `/uploads/${req.file.filename}`;
 
     try {
+      // Get the current user to check for existing profile photo
+      const currentUser = await prisma.user.findUnique({
+        where: { id: parseInt(req.params.id) },
+        select: { profile_photo_url: true },
+      });
+
+      // Delete the previous profile image if it exists
+      if (currentUser && currentUser.profile_photo_url) {
+        const oldImagePath = path.join("public", currentUser.profile_photo_url);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+          console.log(`Deleted old profile image: ${oldImagePath}`);
+        }
+      }
+
       const user = await prisma.user.update({
         where: { id: parseInt(req.params.id) },
         data: { profile_photo_url: photoUrl },

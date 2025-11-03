@@ -29,6 +29,7 @@ function AdminPanel() {
   const [preview, setPreview] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -104,7 +105,31 @@ function AdminPanel() {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    console.log("AdminPanel: File selected:", file?.name);
+    setErrorMessage(""); // Clear previous error messages
+
     if (file) {
+      // Check file size (5 MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5 MB in bytes
+      if (file.size > maxSize) {
+        setErrorMessage("File size should be smaller than 5 MB");
+        e.target.value = ""; // Clear the file input
+        return;
+      }
+
+      // Check file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        setErrorMessage("Only image files are allowed!");
+        e.target.value = ""; // Clear the file input
+        return;
+      }
+
       setProfilePicFile(file);
       setPreview(URL.createObjectURL(file));
     }
@@ -206,6 +231,13 @@ function AdminPanel() {
                           ✅ New photo selected
                         </p>
                       )}
+                      {/* ERROR MESSAGE */}
+                      {errorMessage && (
+                        <div className="p-3 bg-red-900/30 border border-red-500 rounded-md text-red-300 text-sm">
+                          ❌ {errorMessage}
+                        </div>
+                      )}
+
                       <div>
                         <Button
                           type="button"
@@ -214,6 +246,7 @@ function AdminPanel() {
                             setIsEditingProfile(false);
                             setProfilePicFile(null);
                             setPreview(user.profile_photo_url);
+                            setErrorMessage("");
                           }}
                           className="border-gray-600 hover:bg-gray-700"
                         >
