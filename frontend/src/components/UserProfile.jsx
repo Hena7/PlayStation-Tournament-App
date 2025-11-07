@@ -4,6 +4,15 @@ import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import api from "../lib/api";
 
+function convertToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result); // Base64 string
+    reader.onerror = (error) => reject(error);
+  });
+}
+
 function UserProfile() {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -85,14 +94,13 @@ function UserProfile() {
 
       // Update profile photo if selected
       if (profilePicFile) {
-        const photoFormData = new FormData();
-        photoFormData.append("profile_photo", profilePicFile);
-        const photoUpdateResponse = await api.post(
+        const base64 = await convertToBase64(profilePicFile);
+        const photoUpdateResponse = await api.put(
           `/api/user/${user.id}/photo`,
-          photoFormData,
+          { photo_base64: base64 },
           {
             headers: {
-              "Content-Type": "multipart/form-data",
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           }

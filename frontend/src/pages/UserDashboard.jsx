@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import api from "../lib/api";
-import { Button } from "../components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,6 +12,7 @@ import { Bell, Trophy, AlertCircle } from "lucide-react";
 import TournamentApplication from "../components/TournamentApplication";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import UserProfile from "../components/UserProfile";
 
 function UserDashboard() {
   const [user, setUser] = useState(null);
@@ -103,42 +103,7 @@ function UserDashboard() {
             </Card>
           )}
           {/* User Profile Section */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-xl mb-8">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              {/* User Info */}
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16 border-2 border-primary">
-                  <AvatarImage
-                    src={user.profile_photo_url}
-                    alt={user.username}
-                  />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
-                    {user.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-lg font-semibold">{user.username}</p>
-                  <p className="text-gray-400">{user.email}</p>
-                </div>
-              </div>
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-2 pt-4 sm:pt-0">
-                <Button
-                  onClick={() => navigate("/profile")}
-                  className="bg-primary hover:bg-blue-700 flex-1 sm:flex-initial"
-                >
-                  Edit Profile
-                </Button>
-                <Button
-                  onClick={handleLogout}
-                  variant="destructive"
-                  className="flex-1 sm:flex-initial bg-red-600 hover:bg-red-900"
-                >
-                  Logout
-                </Button>
-              </div>
-            </div>
-          </div>
+          <UserProfile />
           {/* Tournament Application */}
           <TournamentApplication userId={user.id} onApply={handleApply} />
           {/* Notifications Section */}
