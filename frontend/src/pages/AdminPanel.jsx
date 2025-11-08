@@ -113,7 +113,17 @@ function AdminPanel() {
         <div className="max-w-6xl mx-auto">
           {/* Admin Profile Section */}
           {showEditProfile ? (
-            <UserProfile />
+            <div>
+              <UserProfile />
+              <div className="text-center">
+                <Button
+                  onClick={() => setShowEditProfile(false)}
+                  className="bg-primary my-4"
+                >
+                  Back to Admin Dashboard
+                </Button>
+              </div>
+            </div>
           ) : (
             <Card className="bg-gray-800 border-none mb-8">
               <CardHeader>
