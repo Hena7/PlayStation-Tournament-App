@@ -13,6 +13,7 @@ import TournamentApplication from "../components/TournamentApplication";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import UserProfile from "../components/UserProfile";
+import { Button } from "../components/ui/button";
 
 function UserDashboard() {
   const [user, setUser] = useState(null);
@@ -21,6 +22,7 @@ function UserDashboard() {
   const [matches, setMatches] = useState([]);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,7 +105,65 @@ function UserDashboard() {
             </Card>
           )}
           {/* User Profile Section */}
-          <UserProfile />
+          {showEditProfile ? (
+            <div>
+              <UserProfile />
+              <div className="text-center">
+                <Button
+                  onClick={() => setShowEditProfile(false)}
+                  className="bg-primary my-4"
+                >
+                  Back to Dashboard
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Card className="bg-gray-800 border-none mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <span className="mr-2">🌟</span>
+                  Your Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="h-16 w-16 border-2 border-primary">
+                      <AvatarImage
+                        src={user?.profile_photo_url}
+                        alt={user?.username}
+                      />
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white">
+                        {user?.username
+                          ? user.username.charAt(0).toUpperCase()
+                          : "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-lg font-semibold">{user?.username}</p>
+                      <p className="text-gray-400">{user?.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={() => setShowEditProfile(true)}
+                      className="bg-primary hover:bg-blue-700"
+                    >
+                      ✏️ Edit Profile
+                    </Button>
+                    <Button
+                      onClick={handleLogout}
+                      variant="destructive"
+                      className="bg-red-600 hover:bg-red-900"
+                    >
+                      Logout
+                    </Button>{" "}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Tournament Application */}
           <TournamentApplication userId={user.id} onApply={handleApply} />
           {/* Notifications Section */}
